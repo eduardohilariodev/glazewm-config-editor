@@ -50,6 +50,9 @@ const ptBR: Dictionary = {
     placeholderStartup: "ex.: shell-exec zebar",
     placeholderShutdown: "ex.: shell-exec taskkill /im zebar.exe",
     placeholderReload: 'ex.: shell-exec notify "Config reloaded"',
+    edit: "Editar",
+    done: "Pronto",
+    noCommands: "Sem comandos",
   },
   gaps: {
     scaleWithDpi: "Escalar com o DPI",
@@ -108,6 +111,8 @@ const ptBR: Dictionary = {
     addCommand: "Adicionar comando",
     removeKeybinding: "Remover atalho",
     addKeybinding: "Adicionar atalho",
+    edit: "Editar",
+    done: "Pronto",
   },
   rules: {
     filterPlaceholder: "Filtrar regras (processo / classe / título / texto do comando)…",

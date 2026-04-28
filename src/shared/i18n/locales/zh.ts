@@ -48,6 +48,9 @@ const zh: Dictionary = {
     placeholderStartup: "例如 shell-exec zebar",
     placeholderShutdown: "例如 shell-exec taskkill /im zebar.exe",
     placeholderReload: '例如 shell-exec notify "Config reloaded"',
+    edit: "编辑",
+    done: "完成",
+    noCommands: "无命令",
   },
   gaps: {
     scaleWithDpi: "随 DPI 缩放",
@@ -104,6 +107,8 @@ const zh: Dictionary = {
     addCommand: "添加命令",
     removeKeybinding: "移除快捷键",
     addKeybinding: "添加快捷键",
+    edit: "编辑",
+    done: "完成",
   },
   rules: {
     filterPlaceholder: "筛选规则（匹配进程 / 类名 / 标题 / 命令文本）…",

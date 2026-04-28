@@ -51,6 +51,9 @@ const it: Dictionary = {
     placeholderStartup: "es. shell-exec zebar",
     placeholderShutdown: "es. shell-exec taskkill /im zebar.exe",
     placeholderReload: 'es. shell-exec notify "Config reloaded"',
+    edit: "Modifica",
+    done: "Fatto",
+    noCommands: "Nessun comando",
   },
   gaps: {
     scaleWithDpi: "Scala con i DPI",
@@ -109,6 +112,8 @@ const it: Dictionary = {
     addCommand: "Aggiungi comando",
     removeKeybinding: "Rimuovi scorciatoia",
     addKeybinding: "Aggiungi scorciatoia",
+    edit: "Modifica",
+    done: "Fatto",
   },
   rules: {
     filterPlaceholder: "Filtra regole (processo / classe / titolo / testo del comando)…",

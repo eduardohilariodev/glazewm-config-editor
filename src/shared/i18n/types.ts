@@ -57,6 +57,9 @@ export interface Dictionary {
     placeholderStartup: string;
     placeholderShutdown: string;
     placeholderReload: string;
+    edit: string;
+    done: string;
+    noCommands: string;
   };
   gaps: {
     scaleWithDpi: string;
@@ -113,6 +116,8 @@ export interface Dictionary {
     addCommand: string;
     removeKeybinding: string;
     addKeybinding: string;
+    edit: string;
+    done: string;
   };
   rules: {
     filterPlaceholder: string;

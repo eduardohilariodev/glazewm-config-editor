@@ -50,6 +50,9 @@ const en: Dictionary = {
     placeholderStartup: "e.g. shell-exec zebar",
     placeholderShutdown: "e.g. shell-exec taskkill /im zebar.exe",
     placeholderReload: 'e.g. shell-exec notify "Config reloaded"',
+    edit: "Edit",
+    done: "Done",
+    noCommands: "No commands",
   },
   gaps: {
     scaleWithDpi: "Scale with DPI",
@@ -108,6 +111,8 @@ const en: Dictionary = {
     addCommand: "Add command",
     removeKeybinding: "Remove keybinding",
     addKeybinding: "Add keybinding",
+    edit: "Edit",
+    done: "Done",
   },
   rules: {
     filterPlaceholder: "Filter rules (matches process / class / title / command text)…",
@@ -145,7 +150,7 @@ const en: Dictionary = {
     done: "Done",
     anyWindow: "Any window",
     readCommandsHeader: "Execute the commands",
-    readConditionsHeader: "When these conditions are met:",
+    readConditionsHeader: "When these conditions are met",
     fieldReadProcess: "Window process name",
     fieldReadClass: "Window class",
     fieldReadTitle: "Window title",
