@@ -63,8 +63,11 @@
     onPatchWorkspaces((ws) => ws.splice(i, 1));
     // Drop any single-command focus binding for the removed workspace.
     onPatchKeybindings((kb) => setWorkspaceBindings(kb, removed.name, []));
-    const next = new Set(expanded);
-    next.delete(i);
+    const next = new Set<number>();
+    for (const idx of expanded) {
+      if (idx < i) next.add(idx);
+      else if (idx > i) next.add(idx - 1);
+    }
     expanded = next;
   }
 
@@ -90,17 +93,24 @@
 
   function reorder(from: number, to: number) {
     if (from === to) return;
+    // "Drop on row X" means insert before X; adjust for the removed slot when moving down.
+    const insertAt = from < to ? to - 1 : to;
     onPatchWorkspaces((ws) => {
       const [item] = ws.splice(from, 1);
-      ws.splice(to, 0, item);
+      ws.splice(insertAt, 0, item);
     });
     // Remap expanded set so the right rows stay open after reorder.
     const next = new Set<number>();
     for (const idx of expanded) {
-      if (idx === from) next.add(to);
-      else if (from < to && idx > from && idx <= to) next.add(idx - 1);
-      else if (from > to && idx >= to && idx < from) next.add(idx + 1);
-      else next.add(idx);
+      if (idx === from) {
+        next.add(insertAt);
+      } else if (from < to && idx > from && idx <= insertAt) {
+        next.add(idx - 1);
+      } else if (from > to && idx >= insertAt && idx < from) {
+        next.add(idx + 1);
+      } else {
+        next.add(idx);
+      }
     }
     expanded = next;
   }
@@ -171,7 +181,7 @@
       </tr>
     </thead>
     <tbody>
-      {#each workspaces as ws, i (i)}
+      {#each workspaces as ws, i (ws)}
         {@const bindings = getBindingsFor(ws.name)}
         {@const isExpanded = expanded.has(i)}
         <tr
