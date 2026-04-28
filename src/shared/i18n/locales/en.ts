@@ -21,6 +21,9 @@ const en: Dictionary = {
       "⚠ The config file changed on disk (you have unsaved edits). Use the updated version?",
     reloadFromDisk: "Reload from disk",
     keepMine: "Keep mine",
+    liveMode: "Live mode",
+    liveModeTooltip:
+      "When enabled, changes are automatically saved and applied to GlazeWM whenever you leave an input field.",
   },
   tabs: {
     general: "General",

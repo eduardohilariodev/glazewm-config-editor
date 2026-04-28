@@ -20,6 +20,8 @@ const zh: Dictionary = {
     externalChangedUnsaved: "⚠ 配置文件在磁盘上已被更改（你有未保存的修改）。是否使用更新后的版本？",
     reloadFromDisk: "从磁盘重新加载",
     keepMine: "保留我的",
+    liveMode: "实时模式",
+    liveModeTooltip: "启用后，离开输入框时更改会自动保存并应用到 GlazeWM。",
   },
   tabs: {
     general: "常规",

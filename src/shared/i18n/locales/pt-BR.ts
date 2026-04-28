@@ -21,6 +21,9 @@ const ptBR: Dictionary = {
       "⚠ O arquivo de configuração mudou no disco (você tem alterações não salvas). Usar a versão atualizada?",
     reloadFromDisk: "Recarregar do disco",
     keepMine: "Manter as minhas",
+    liveMode: "Modo ao vivo",
+    liveModeTooltip:
+      "Quando ativado, as alterações são salvas e aplicadas automaticamente ao GlazeWM ao sair de um campo de entrada.",
   },
   tabs: {
     general: "Geral",

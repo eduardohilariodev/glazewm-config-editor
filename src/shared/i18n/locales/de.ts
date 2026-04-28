@@ -22,6 +22,9 @@ const de: Dictionary = {
       "⚠ Die Konfigurationsdatei wurde auf der Festplatte geändert (Sie haben ungespeicherte Änderungen). Aktualisierte Version verwenden?",
     reloadFromDisk: "Von Festplatte neu laden",
     keepMine: "Meine behalten",
+    liveMode: "Live-Modus",
+    liveModeTooltip:
+      "Wenn aktiviert, werden Änderungen automatisch gespeichert und auf GlazeWM angewendet, sobald Sie ein Eingabefeld verlassen.",
   },
   tabs: {
     general: "Allgemein",

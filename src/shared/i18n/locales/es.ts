@@ -22,6 +22,9 @@ const es: Dictionary = {
       "⚠ El archivo de configuración cambió en el disco (tienes cambios sin guardar). ¿Usar la versión actualizada?",
     reloadFromDisk: "Recargar desde el disco",
     keepMine: "Conservar los míos",
+    liveMode: "Modo en vivo",
+    liveModeTooltip:
+      "Cuando está activado, los cambios se guardan y aplican automáticamente a GlazeWM al salir de un campo de entrada.",
   },
   tabs: {
     general: "General",

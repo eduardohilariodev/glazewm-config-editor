@@ -30,6 +30,8 @@ export interface Dictionary {
     externalChangedUnsaved: string;
     reloadFromDisk: string;
     keepMine: string;
+    liveMode: string;
+    liveModeTooltip: string;
   };
   tabs: {
     general: string;
