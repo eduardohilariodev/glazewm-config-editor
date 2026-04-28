@@ -5,6 +5,7 @@
   "windows": ["main", "picker-overlay"],
   "permissions": [
     "core:default",
+    "core:window:allow-set-title",
     "fs:allow-read-text-file",
     "fs:allow-write-text-file",
     "fs:allow-exists",
