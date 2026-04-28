@@ -1,5 +1,6 @@
 <script lang="ts">
   import { store } from "$shared/store/config.svelte";
+  import { settings } from "$shared/store/settings.svelte";
   import { i18n } from "$shared/i18n/index.svelte";
   import { emptyConfig } from "$shared/types/config";
   import { parseConfig, serializeConfig } from "$shared/yaml";
@@ -14,8 +15,9 @@
     setWindowTitle,
     getMtime,
   } from "$shared/tauri";
+  import Toggle from "$shared/ui/Toggle.svelte";
   import TabBar from "$shared/ui/TabBar.svelte";
-  import KbdSequence from "$shared/ui/KbdSequence.svelte";
+  import MenuBar from "$shared/ui/MenuBar.svelte";
   import GeneralTab from "$features/general";
   import GapsTab from "$features/gaps";
   import WindowEffectsTab from "$features/effects";
@@ -30,14 +32,8 @@
     SquaresFour,
     Keyboard,
     Funnel,
-    SlidersHorizontal,
     ArrowUUpLeft,
     ArrowUUpRight,
-    ClockCounterClockwise,
-    FolderOpen,
-    FloppyDisk,
-    FloppyDiskBack,
-    ArrowsClockwise,
     Warning,
     Circle,
   } from "phosphor-svelte";
@@ -209,107 +205,71 @@
 
 <main class="grid grid-rows-[auto_auto_1fr_auto] h-screen w-full overflow-hidden min-w-0">
   <header class="flex items-center justify-between px-3 py-2 bg-[#1e1e1e] border-b border-[#333] gap-4">
-    <div class="flex gap-[0.4rem] items-center">
-      <button
-        type="button"
-        class="inline-flex items-center gap-2 px-[0.8rem] py-[0.4rem] border border-[#444] rounded bg-[#2a2a2a] text-inherit cursor-pointer font-[inherit] enabled:hover:bg-[#3a3a3a] disabled:opacity-40 disabled:cursor-not-allowed"
-        onclick={openFile}
-      ><FolderOpen size={16} />{i18n.t.app.open} <KbdSequence value="Ctrl+O" size="sm" /></button>
-      <button
-        type="button"
-        class="inline-flex items-center gap-2 px-[0.8rem] py-[0.4rem] border border-[#444] rounded bg-[#2a2a2a] text-inherit cursor-pointer font-[inherit] enabled:hover:bg-[#3a3a3a] disabled:opacity-40 disabled:cursor-not-allowed"
-        onclick={saveFile}
-        disabled={!store.config}
-      >
-        <FloppyDisk size={16} />{i18n.t.app.save}{store.isDirty ? " *" : ""} <KbdSequence value="Ctrl+S" size="sm" />
-      </button>
-      <button
-        type="button"
-        class="inline-flex items-center gap-2 px-[0.8rem] py-[0.4rem] border border-[#444] rounded bg-[#2a2a2a] text-inherit cursor-pointer font-[inherit] enabled:hover:bg-[#3a3a3a] disabled:opacity-40 disabled:cursor-not-allowed"
-        onclick={saveAs}
-        disabled={!store.config}
-      ><FloppyDiskBack size={16} />{i18n.t.app.saveAs} <KbdSequence value="Ctrl+Shift+S" size="sm" /></button>
-      <button
-        type="button"
-        class="inline-flex items-center gap-2 px-[0.8rem] py-[0.4rem] border border-[#0289a3] rounded bg-[#015f74] text-inherit cursor-pointer font-[inherit] enabled:hover:bg-[#0289a3] disabled:opacity-40 disabled:cursor-not-allowed"
-        onclick={saveAndReload}
-        disabled={!store.config}
-      >
-        <ArrowsClockwise size={16} />{i18n.t.app.saveAndReload} <KbdSequence value="Ctrl+R" size="sm" />
-      </button>
-    </div>
-    <div class="relative flex gap-[0.4rem] items-center">
-      <div class="inline-flex border border-[#444] rounded overflow-visible" role="group" aria-label="History">
-        <button
-          type="button"
-          class="inline-flex items-center justify-center px-2 py-[0.35rem] border-0 border-r border-[#444] rounded-none bg-[#2a2a2a] text-inherit cursor-pointer leading-none enabled:hover:bg-[#3a3a3a] disabled:opacity-40 disabled:cursor-not-allowed"
-          onclick={() => store.undo()}
-          disabled={!store.canUndo}
-          title={i18n.t.app.undoTitle}
-          aria-label={i18n.t.app.undoAria}
-        ><ArrowUUpLeft size={18} /></button>
-        <button
-          type="button"
-          class="inline-flex items-center justify-center px-2 py-[0.35rem] border-0 border-r border-[#444] rounded-none bg-[#2a2a2a] text-inherit cursor-pointer leading-none enabled:hover:bg-[#3a3a3a] disabled:opacity-40 disabled:cursor-not-allowed"
-          onclick={() => store.redo()}
-          disabled={!store.canRedo}
-          title={i18n.t.app.redoTitle}
-          aria-label={i18n.t.app.redoAria}
-        ><ArrowUUpRight size={18} /></button>
-        <div class="relative">
-          <button
-            type="button"
-            class="inline-flex items-center justify-center px-2 py-[0.35rem] border-0 rounded-none bg-[#2a2a2a] text-inherit cursor-pointer leading-none enabled:hover:bg-[#3a3a3a] disabled:opacity-40 disabled:cursor-not-allowed"
-            onclick={() => (historyOpen = !historyOpen)}
-            disabled={!store.canUndo && !store.canRedo}
-            title={i18n.t.app.historyTitle(store.past.length)}
-            aria-label={i18n.t.app.historyAria}
-          ><ClockCounterClockwise size={18} /></button>
-          {#if historyOpen}
-            <div
-              class="absolute top-[calc(100%+4px)] right-0 z-50 min-w-[240px] max-h-[60vh] overflow-auto bg-[#1e1e1e] border border-[#444] rounded-md shadow-[0_6px_20px_rgba(0,0,0,0.5)] p-[0.3rem] flex flex-col gap-[2px]"
-              role="menu"
-            >
-              {#if store.future.length > 0}
-                <div class="text-[0.7rem] uppercase tracking-[0.05em] text-[#777] px-2 pt-[0.4rem] pb-[0.2rem]">{i18n.t.history.redoStack}</div>
-                {#each [...store.futureLabels].reverse() as h, idx (idx + "f")}
-                  {@const targetFutureIdx = store.future.length - 1 - idx}
-                  <button
-                    type="button"
-                    class="text-left px-2 py-[0.4rem] border-0 rounded-[3px] bg-transparent text-[#ddd] text-[0.85rem] flex justify-between gap-2 items-center cursor-pointer hover:bg-[#2a2a2a]"
-                    onclick={() => { store.redoTo(targetFutureIdx); historyOpen = false; }}
-                  ><span class="inline-flex items-center gap-1.5"><ArrowUUpRight size={12} weight="bold" />{h.label}</span><span class="text-[#777] text-xs font-mono">{fmtTime(h.at)}</span></button>
-                {/each}
-              {/if}
-              <div class="text-[0.7rem] uppercase tracking-[0.05em] text-[#777] px-2 pt-[0.4rem] pb-[0.2rem]">{i18n.t.history.current}</div>
-              <div class="text-left px-2 py-[0.4rem] rounded-[3px] bg-transparent text-[#6cc070] text-[0.85rem] flex justify-between gap-2 items-center cursor-default"><span class="inline-flex items-center gap-1.5"><Circle size={10} weight="fill" />{store.isDirty ? i18n.t.history.unsaved : i18n.t.history.saved}</span></div>
-              {#if store.past.length > 0}
-                <div class="text-[0.7rem] uppercase tracking-[0.05em] text-[#777] px-2 pt-[0.4rem] pb-[0.2rem]">{i18n.t.history.undoStack}</div>
-                {#each [...store.pastLabels].reverse() as h, idx (idx + "p")}
-                  {@const targetPastIdx = store.past.length - 1 - idx}
-                  <button
-                    type="button"
-                    class="text-left px-2 py-[0.4rem] border-0 rounded-[3px] bg-transparent text-[#ddd] text-[0.85rem] flex justify-between gap-2 items-center cursor-pointer hover:bg-[#2a2a2a]"
-                    onclick={() => { store.undoTo(targetPastIdx); historyOpen = false; }}
-                  ><span class="inline-flex items-center gap-1.5"><ArrowUUpLeft size={12} weight="bold" />{h.label}</span><span class="text-[#777] text-xs font-mono">{fmtTime(h.at)}</span></button>
-                {/each}
-                <button
-                  type="button"
-                  class="text-left px-2 py-[0.4rem] border-0 rounded-[3px] bg-transparent text-[#ddd] text-[0.85rem] flex justify-between gap-2 items-center cursor-pointer hover:bg-[#2a2a2a]"
-                  onclick={() => { store.undoTo(0); historyOpen = false; }}
-                ><span class="inline-flex items-center gap-1.5"><ArrowUUpLeft size={12} weight="bold" />{i18n.t.history.initialState}</span></button>
-              {/if}
-            </div>
+    <div class="relative">
+      <MenuBar
+        configLoaded={!!store.config}
+        canUndo={store.canUndo}
+        canRedo={store.canRedo}
+        {historyOpen}
+        onOpen={openFile}
+        onSave={saveFile}
+        onSaveAs={saveAs}
+        onSaveAndReload={saveAndReload}
+        onUndo={() => store.undo()}
+        onRedo={() => store.redo()}
+        onToggleHistory={() => (historyOpen = !historyOpen)}
+      />
+      {#if historyOpen}
+        <div
+          class="absolute top-[calc(100%+4px)] right-0 z-50 min-w-[240px] max-h-[60vh] overflow-auto bg-[#1e1e1e] border border-[#444] rounded-md shadow-[0_6px_20px_rgba(0,0,0,0.5)] p-[0.3rem] flex flex-col gap-[2px]"
+          role="menu"
+        >
+          {#if store.future.length > 0}
+            <div class="text-[0.7rem] uppercase tracking-[0.05em] text-[#777] px-2 pt-[0.4rem] pb-[0.2rem]">{i18n.t.history.redoStack}</div>
+            {#each [...store.futureLabels].reverse() as h, idx (idx + "f")}
+              {@const targetFutureIdx = store.future.length - 1 - idx}
+              <button
+                type="button"
+                class="text-left px-2 py-[0.4rem] border-0 rounded-[3px] bg-transparent text-[#ddd] text-[0.85rem] flex justify-between gap-2 items-center cursor-pointer hover:bg-[#2a2a2a]"
+                onclick={() => { store.redoTo(targetFutureIdx); historyOpen = false; }}
+              ><span class="inline-flex items-center gap-1.5"><ArrowUUpRight size={12} weight="bold" />{h.label}</span><span class="text-[#777] text-xs font-mono">{fmtTime(h.at)}</span></button>
+            {/each}
+          {/if}
+          <div class="text-[0.7rem] uppercase tracking-[0.05em] text-[#777] px-2 pt-[0.4rem] pb-[0.2rem]">{i18n.t.history.current}</div>
+          <div class="text-left px-2 py-[0.4rem] rounded-[3px] bg-transparent text-[#6cc070] text-[0.85rem] flex justify-between gap-2 items-center cursor-default"><span class="inline-flex items-center gap-1.5"><Circle size={10} weight="fill" />{store.isDirty ? i18n.t.history.unsaved : i18n.t.history.saved}</span></div>
+          {#if store.past.length > 0}
+            <div class="text-[0.7rem] uppercase tracking-[0.05em] text-[#777] px-2 pt-[0.4rem] pb-[0.2rem]">{i18n.t.history.undoStack}</div>
+            {#each [...store.pastLabels].reverse() as h, idx (idx + "p")}
+              {@const targetPastIdx = store.past.length - 1 - idx}
+              <button
+                type="button"
+                class="text-left px-2 py-[0.4rem] border-0 rounded-[3px] bg-transparent text-[#ddd] text-[0.85rem] flex justify-between gap-2 items-center cursor-pointer hover:bg-[#2a2a2a]"
+                onclick={() => { store.undoTo(targetPastIdx); historyOpen = false; }}
+              ><span class="inline-flex items-center gap-1.5"><ArrowUUpLeft size={12} weight="bold" />{h.label}</span><span class="text-[#777] text-xs font-mono">{fmtTime(h.at)}</span></button>
+            {/each}
+            <button
+              type="button"
+              class="text-left px-2 py-[0.4rem] border-0 rounded-[3px] bg-transparent text-[#ddd] text-[0.85rem] flex justify-between gap-2 items-center cursor-pointer hover:bg-[#2a2a2a]"
+              onclick={() => { store.undoTo(0); historyOpen = false; }}
+            ><span class="inline-flex items-center gap-1.5"><ArrowUUpLeft size={12} weight="bold" />{i18n.t.history.initialState}</span></button>
           {/if}
         </div>
-      </div>
+      {/if}
+    </div>
+    <div class="flex gap-[0.4rem] items-center">
+      <Toggle
+        checked={settings.advancedMode}
+        label="Advanced mode"
+        title={settings.advancedMode ? 'Advanced mode on — showing raw names' : 'Advanced mode off — showing friendly labels'}
+        onChange={(v) => (settings.advancedMode = v)}
+      />
       <button
         type="button"
         class="inline-flex items-center justify-center px-2 py-[0.35rem] border rounded text-inherit cursor-pointer leading-none enabled:hover:bg-[#3a3a3a] disabled:opacity-40 disabled:cursor-not-allowed {active === 'settings' ? 'bg-[#015f74] border-[#0289a3] text-white' : 'bg-[#2a2a2a] border-[#444]'}"
         onclick={() => (active = "settings")}
         title={i18n.t.app.settingsTitle}
         aria-label={i18n.t.app.settings}
-      ><SlidersHorizontal size={18} /></button>
+      ><Gear size={18} /></button>
     </div>
   </header>
 
