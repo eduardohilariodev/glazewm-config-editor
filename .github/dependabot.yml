@@ -9,8 +9,8 @@ updates:
     labels:
       - dependencies
     commit-message:
-      prefix: "chore(deps)"
-      prefix-development: "chore(deps-dev)"
+      prefix: "chore"
+      prefix-development: "chore"
       include: scope
     groups:
       dev-dependencies:
@@ -31,7 +31,7 @@ updates:
     labels:
       - dependencies
     commit-message:
-      prefix: "chore(deps)"
+      prefix: "chore"
       include: scope
     # Suppress version-update PRs for transitive deps we cannot bump without
     # an upstream Tauri/wry major release. Security alerts are still raised
@@ -75,5 +75,5 @@ updates:
     labels:
       - dependencies
     commit-message:
-      prefix: "chore(deps)"
+      prefix: "chore"
       include: scope
