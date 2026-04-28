@@ -10,50 +10,114 @@ permissions:
   contents: write
 
 jobs:
-  build:
-    name: Build (windows-latest)
-    runs-on: windows-latest
+  create-release:
+    name: Create release draft
+    runs-on: ubuntu-latest
+    outputs:
+      release_id: ${{ steps.create-release.outputs.result }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
+      - uses: actions/checkout@v4
 
-      - name: Setup Deno
-        uses: denoland/setup-deno@v2
+      - name: Get app version
+        run: echo "APP_VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_ENV
+
+      - name: Create release draft
+        id: create-release
+        uses: actions/github-script@v7
         with:
-          deno-version: v2.x
+          script: |
+            const isTag = context.ref.startsWith('refs/tags/')
+            const tagName = isTag
+              ? context.ref.replace('refs/tags/', '')
+              : `app-v${process.env.APP_VERSION}`
+            const { data } = await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: tagName,
+              name: `GlazeWM Config Editor v${process.env.APP_VERSION}`,
+              body: 'See the assets to download this version and install.',
+              draft: true,
+              prerelease: false,
+            })
+            return data.id
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
+  build:
+    needs: create-release
+    name: Build (${{ matrix.platform }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: windows-latest
+            args: ''
+          - platform: macos-latest
+            args: '--target aarch64-apple-darwin'
+          - platform: macos-latest
+            args: '--target x86_64-apple-darwin'
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: lts/*
 
-      - name: Setup Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
-      - name: Rust cache
-        uses: swatinem/rust-cache@v2
+      - uses: swatinem/rust-cache@v2
         with:
           workspaces: src-tauri -> target
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
 
       - name: Install JS dependencies
         run: deno install
 
-      - name: Build and release with tauri-action
+      - name: Import Apple certificate to keychain
+        if: matrix.platform == 'macos-latest'
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          if [ -n "$APPLE_CERTIFICATE" ]; then
+            KEYCHAIN_PATH="$RUNNER_TEMP/app-signing.keychain-db"
+            echo "$APPLE_CERTIFICATE" | base64 -D > "$RUNNER_TEMP/certificate.p12"
+            security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+            security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+            security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+            security import "$RUNNER_TEMP/certificate.p12" \
+              -P "$APPLE_CERTIFICATE_PASSWORD" \
+              -A -t cert -f pkcs12 \
+              -k "$KEYCHAIN_PATH"
+            security set-key-partition-list \
+              -S apple-tool:,apple: \
+              -s -k "$KEYCHAIN_PASSWORD" \
+              "$KEYCHAIN_PATH"
+            security list-keychain -d user -s "$KEYCHAIN_PATH"
+          fi
+
+      - name: Build and upload release assets
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Tauri updater signing. The private key + (optional) password are
-          # provided as repo secrets. Without these, tauri-action falls back
-          # to building unsigned bundles and the in-app updater will refuse
-          # to apply downloaded updates.
+          # Tauri updater signing
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          # Apple code signing (Tier B — full signing; leave secrets empty for ad-hoc)
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
-          tagName: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'app-v__VERSION__' }}
-          releaseName: 'GlazeWM Config Editor v__VERSION__'
-          releaseBody: 'See the assets to download this version and install.'
-          releaseDraft: true
-          prerelease: false
-          # Generates `latest.json` next to the installer assets (consumed by
-          # tauri-plugin-updater via the endpoint configured in tauri.conf.json).
-          updaterJsonPreferNsis: true
+          releaseId: ${{ needs.create-release.outputs.release_id }}
+          updaterJsonPreferNsis: ${{ matrix.platform == 'windows-latest' }}
+          args: ${{ matrix.args }}
+          tauriScript: deno task tauri
+
