@@ -33,6 +33,38 @@ updates:
     commit-message:
       prefix: "chore(deps)"
       include: scope
+    # Suppress version-update PRs for transitive deps we cannot bump without
+    # an upstream Tauri/wry major release. Security alerts are still raised
+    # by Dependabot security updates (separate channel) and must be dismissed
+    # manually in the Security tab when they are non-exploitable on Windows.
+    #
+    #   * `glib`, `gtk`, `gdk*`, `gio`, `pango`, `soup3`, `webkit2gtk`,
+    #     `javascriptcore-rs`, `libappindicator*`: GTK stack pulled in only
+    #     by `wry` for Linux targets; never compiled on the Windows-only
+    #     release pipeline.
+    #   * `rand 0.7.x`: pulled in by `phf_generator 0.8` (build-time codegen
+    #     for `string_cache_codegen` used by `tauri-utils`). RUSTSEC-2024-...
+    #     requires a runtime custom logger calling `rand::rng()` at trace
+    #     level, which does not apply to a compile-time generator.
+    ignore:
+      - dependency-name: "glib"
+      - dependency-name: "glib-sys"
+      - dependency-name: "glib-macros"
+      - dependency-name: "gtk"
+      - dependency-name: "gdk"
+      - dependency-name: "gdk-pixbuf"
+      - dependency-name: "gdkx11"
+      - dependency-name: "gio"
+      - dependency-name: "pango"
+      - dependency-name: "soup3"
+      - dependency-name: "webkit2gtk"
+      - dependency-name: "javascriptcore-rs"
+      - dependency-name: "libappindicator"
+      - dependency-name: "libappindicator-sys"
+      - dependency-name: "rand"
+        versions: ["0.7.x"]
+      - dependency-name: "phf_generator"
+        versions: ["0.8.x"]
 
   - package-ecosystem: github-actions
     directory: "/"
