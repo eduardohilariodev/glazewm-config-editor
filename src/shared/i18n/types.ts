@@ -149,6 +149,14 @@ export interface Dictionary {
     edit: string;
     done: string;
     anyWindow: string;
+    readCommandsHeader: string;
+    readConditionsHeader: string;
+    fieldReadProcess: string;
+    fieldReadClass: string;
+    fieldReadTitle: string;
+    opReadRegex: string;
+    opReadNotEquals: string;
+    opReadNotRegex: string;
   };
   settings: {
     editorBehavior: string;
