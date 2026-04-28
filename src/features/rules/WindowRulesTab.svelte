@@ -475,7 +475,7 @@
           {:else}
             <ul class="m-0 p-0 list-none flex flex-col gap-[0.2rem]">
               {#each rule.commands as cmd (cmd)}
-                <li class="text-[0.85rem] text-[#ccc] pl-1 before:content-['→'] before:text-[#555] before:mr-2">{describeCommand(cmd)}</li>
+                <li class="text-[0.85rem] pl-1 before:content-['→'] before:text-[#555] before:mr-2"><code class="px-[0.35rem] py-[0.1rem] rounded bg-[#1a1a1a] border border-[#2d2d2d] font-mono text-[0.82rem] text-[#ddd]">{describeCommand(cmd)}</code></li>
               {/each}
             </ul>
           {/if}
@@ -486,8 +486,8 @@
           {#each rule.match as m, j (j)}
             {#if j > 0}
               <div class="flex items-center gap-2 my-[0.1rem]">
-                <span class="flex-1 border-t border-[#2a2a2a]"></span>
-                <span class="text-[0.7rem] uppercase tracking-widest text-[#555]">or</span>
+                <span class="w-10 border-t border-[#2a2a2a]"></span>
+                <span class="text-[0.7rem] uppercase tracking-widest text-primary">or</span>
                 <span class="flex-1 border-t border-[#2a2a2a]"></span>
               </div>
             {/if}
@@ -503,7 +503,8 @@
                   {@const tagDecode = isRegex ? patternToTags(value) : null}
                   <div class="flex flex-wrap items-center gap-x-[0.4rem] gap-y-[0.25rem] text-[0.85rem]">
                     <span class="text-[#777]">{FIELD_READ_LABEL[key]}</span>
-                    <span class="text-[#555]">{OP_READ_LABEL[op]}</span>
+                    <span class="text-primary">{OP_READ_LABEL[op]}</span>
+                    {#if isRegex}<span class="text-primary">for</span>{/if}
                     {#if tagDecode?.ok}
                       <span class="inline-flex flex-wrap gap-[0.3rem]">
                         {#each tagDecode.tags as tag (tag)}
