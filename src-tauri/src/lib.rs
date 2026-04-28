@@ -18,6 +18,8 @@ pub fn run() {
             commands::config::reload_glazewm,
             commands::config::get_mtime,
             commands::window_picker::start_window_pick,
+            commands::shell::open_with_default,
+            commands::shell::reveal_in_explorer,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
