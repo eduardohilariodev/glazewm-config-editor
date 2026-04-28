@@ -11,6 +11,7 @@
   import { applyMask, lengthMask, identifierMask } from "$shared/utils/masks";
   import HighlightedInput from "$shared/ui/HighlightedInput.svelte";
   import { PuzzlePiece, PencilSimple, X } from "phosphor-svelte";
+  import { settings } from "$shared/store/settings.svelte";
 
   interface Props {
     value: string;
@@ -92,7 +93,7 @@
         onchange={(e) => setVerb((e.currentTarget as HTMLSelectElement).value)}
       >
         {#each VERBS as v (v.name)}
-          <option value={v.name}>{v.name}</option>
+          <option value={v.name}>{settings.advancedMode ? v.name : (v.label ?? v.name)}</option>
         {/each}
       </select>
 
@@ -103,7 +104,7 @@
           onchange={(e) => setOption(Number((e.currentTarget as HTMLSelectElement).value))}
         >
           {#each verb.options as o, i (i)}
-            <option value={String(i)}>{o.label}</option>
+            <option value={String(i)}>{settings.advancedMode ? o.label : (o.friendlyLabel ?? o.label)}</option>
           {/each}
         </select>
       {:else}

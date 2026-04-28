@@ -10,11 +10,14 @@ class SettingsStore {
   autoSortTags = $state(true);
   /** Sort top-level alternatives in raw regex mode on blur. */
   autoSortRawAlternatives = $state(true);
+  /** Show raw command/option names instead of human-readable labels. */
+  advancedMode = $state(false);
 
   toJSON() {
     return {
       autoSortTags: this.autoSortTags,
       autoSortRawAlternatives: this.autoSortRawAlternatives,
+      advancedMode: this.advancedMode,
     };
   }
 
@@ -24,6 +27,7 @@ class SettingsStore {
     if (typeof r.autoSortTags === "boolean") this.autoSortTags = r.autoSortTags;
     if (typeof r.autoSortRawAlternatives === "boolean")
       this.autoSortRawAlternatives = r.autoSortRawAlternatives;
+    if (typeof r.advancedMode === "boolean") this.advancedMode = r.advancedMode;
   }
 }
 
