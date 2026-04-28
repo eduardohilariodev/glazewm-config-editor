@@ -1,0 +1,90 @@
+<script lang="ts">
+  import { listen, type UnlistenFn } from "@tauri-apps/api/event";
+  import { onMount } from "svelte";
+
+  type HoverPayload = {
+    x: number;
+    y: number;
+    process: string;
+    class_name: string;
+    title: string;
+  };
+
+  let x = $state(0);
+  let y = $state(0);
+  let process = $state("");
+  let title = $state("");
+  let className = $state("");
+  let visible = $state(false);
+
+  // Tooltip placement: offset so the cursor tip stays uncovered, and flip to
+  // the other side near screen edges so the box never clips off-screen.
+  const TOOLTIP_W = 320;
+  const TOOLTIP_H = 96;
+  const OFFSET = 16;
+
+  let tipLeft = $derived.by(() => {
+    const w = typeof window !== "undefined" ? window.innerWidth : 1920;
+    return x + OFFSET + TOOLTIP_W > w ? Math.max(0, x - OFFSET - TOOLTIP_W) : x + OFFSET;
+  });
+  let tipTop = $derived.by(() => {
+    const h = typeof window !== "undefined" ? window.innerHeight : 1080;
+    return y + OFFSET + TOOLTIP_H > h ? Math.max(0, y - OFFSET - TOOLTIP_H) : y + OFFSET;
+  });
+
+  onMount(() => {
+    let unHover: UnlistenFn | null = null;
+    let unHide: UnlistenFn | null = null;
+    (async () => {
+      unHover = await listen<HoverPayload>("picker-hover", ({ payload }) => {
+        x = payload.x;
+        y = payload.y;
+        process = payload.process;
+        title = payload.title;
+        className = payload.class_name;
+        visible = true;
+      });
+      unHide = await listen("picker-hide", () => {
+        visible = false;
+      });
+    })();
+    return () => {
+      unHover?.();
+      unHide?.();
+    };
+  });
+</script>
+
+<svelte:head>
+  <style>
+    /* Critical: every layer must be transparent so the desktop is visible
+       through the overlay window. Click-through is enforced at the OS level
+       via set_ignore_cursor_events on the Rust side. */
+    html, body { background: transparent !important; margin: 0; padding: 0; overflow: hidden; }
+  </style>
+</svelte:head>
+
+<div class="fixed inset-0 pointer-events-none">
+  {#if visible}
+    <div
+      class="absolute rounded-md border border-[#444] bg-black/85 text-white text-[12px] leading-tight px-3 py-2 shadow-2xl backdrop-blur-sm"
+      style="left: {tipLeft}px; top: {tipTop}px; width: {TOOLTIP_W}px;"
+    >
+      <div class="flex gap-2">
+        <span class="text-white/40 w-[3.5rem] shrink-0">process</span>
+        <span class="font-mono truncate">{process || "—"}</span>
+      </div>
+      <div class="flex gap-2">
+        <span class="text-white/40 w-[3.5rem] shrink-0">class</span>
+        <span class="font-mono truncate">{className || "—"}</span>
+      </div>
+      <div class="flex gap-2">
+        <span class="text-white/40 w-[3.5rem] shrink-0">title</span>
+        <span class="font-mono truncate">{title || "—"}</span>
+      </div>
+      <div class="mt-1 pt-1 border-t border-white/10 text-[10px] text-white/50">
+        Click to pick · Right-click to cancel
+      </div>
+    </div>
+  {/if}
+</div>

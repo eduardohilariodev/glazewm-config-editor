@@ -12,6 +12,7 @@
   "app": {
     "windows": [
       {
+        "label": "main",
         "title": "GlazeWM Config Editor",
         "width": 960,
         "height": 700,
@@ -19,6 +20,20 @@
         "minHeight": 600,
         "resizable": true,
         "center": true
+      },
+      {
+        "label": "picker-overlay",
+        "url": "picker",
+        "transparent": true,
+        "decorations": false,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "visible": false,
+        "resizable": false,
+        "focus": false,
+        "shadow": false,
+        "width": 100,
+        "height": 100
       }
     ],
     "security": {

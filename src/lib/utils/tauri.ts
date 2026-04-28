@@ -1,7 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-
+import { listen } from "@tauri-apps/api/event";
 export async function openConfigDialog(defaultPath?: string): Promise<string | null> {
   const result = await open({
     title: "Open GlazeWM config.yaml",
@@ -58,5 +58,65 @@ export async function setWindowTitle(title: string): Promise<void> {
     await getCurrentWindow().setTitle(title);
   } catch {
     // No-op outside of a Tauri runtime (SSR/tests).
+  }
+}
+
+export interface WindowPickResult {
+  process: string;
+  class_name: string;
+  title: string;
+}
+
+// Module-level guard — prevents concurrent picks from cross-resolving on the
+// same global "window-picked" event (the backend also enforces this, but a
+// frontend guard means a second click is silently a no-op instead of an error).
+let _pickInFlight = false;
+
+/**
+ * Installs a low-level mouse hook via Rust and waits for the user to click a
+ * target window. The app window stays visible — the Rust hook filters out
+ * clicks on our own process, so the user can still see the picker UI state.
+ * Returns the window's info, or null if cancelled (right-click) or errored.
+ */
+export async function startWindowPick(): Promise<WindowPickResult | null> {
+  if (_pickInFlight) return null;
+  _pickInFlight = true;
+  // Object ref avoids TS narrowing `unlisten` to `null` since assignment
+  // happens inside a Promise callback.
+  const ref: { unlisten: (() => void) | null } = { unlisten: null };
+  try {
+    return await new Promise<WindowPickResult | null>((resolve) => {
+      let settled = false;
+      const finish = (v: WindowPickResult | null) => {
+        if (settled) return;
+        settled = true;
+        resolve(v);
+      };
+      listen<WindowPickResult & { cancelled: boolean }>(
+        "window-picked",
+        ({ payload }) => {
+          finish(
+            payload.cancelled
+              ? null
+              : {
+                  process: payload.process,
+                  class_name: payload.class_name,
+                  title: payload.title,
+                },
+          );
+        },
+      )
+        .then((u) => {
+          ref.unlisten = u;
+          return invoke<void>("start_window_pick");
+        })
+        .catch((e) => {
+          console.error("window picker failed:", e);
+          finish(null);
+        });
+    });
+  } finally {
+    ref.unlisten?.();
+    _pickInFlight = false;
   }
 }
