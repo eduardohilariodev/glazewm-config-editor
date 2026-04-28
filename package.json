@@ -15,6 +15,7 @@
   "license": "MIT",
   "dependencies": {
     "@tailwindcss/vite": "^4.2.4",
+    "country-flag-icons": "^1.5.13",
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-dialog": "^2",
     "@tauri-apps/plugin-fs": "^2",

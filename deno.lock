@@ -16,6 +16,7 @@
     "npm:@tauri-apps/plugin-process@2": "2.3.1",
     "npm:@tauri-apps/plugin-updater@2": "2.10.1",
     "npm:@types/js-yaml@^4.0.9": "4.0.9",
+    "npm:country-flag-icons@^1.5.13": "1.6.16",
     "npm:husky@^9.1.7": "9.1.7",
     "npm:js-yaml@^4.1.0": "4.1.1",
     "npm:phosphor-svelte@^3.1.0": "3.1.0_svelte@5.55.5_vite@8.0.10",
@@ -460,6 +461,9 @@
     "cookie@0.6.0": {
       "integrity": "sha512-U71cyTamuh1CRNCfpGY6to28lxvNwPG4Guz/EVjgf3Jmzv0vlDp1atT9eS5dDjMYHucpHbWns6Lwf3BKz6svdw=="
     },
+    "country-flag-icons@1.6.16": {
+      "integrity": "sha512-HxJVoE/aaZGcUMx1vK/u9430uKGB3ODZDDZJJOqVJQzoHk5v42c0fSp1rk4tDfyr1dVOJjwxRiaBPliBMo2Liw=="
+    },
     "deepmerge@4.3.1": {
       "integrity": "sha512-3sUqbMEc77XqpdNO7FRyRog+eW3ph+GYCbj+rK+uYyRMuwsVy0rMiVtPn+QJlKFvWP/1PYpapqYn0Me2knFn+A=="
     },
@@ -804,6 +808,7 @@
         "npm:@tauri-apps/plugin-process@2",
         "npm:@tauri-apps/plugin-updater@2",
         "npm:@types/js-yaml@^4.0.9",
+        "npm:country-flag-icons@^1.5.13",
         "npm:husky@^9.1.7",
         "npm:js-yaml@^4.1.0",
         "npm:phosphor-svelte@^3.1.0",

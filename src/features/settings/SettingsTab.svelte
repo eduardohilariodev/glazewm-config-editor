@@ -3,6 +3,17 @@
   import { settings } from "$shared/store/settings.svelte";
   import { i18n, locales } from "$shared/i18n/index.svelte";
   import type { LocaleId } from "$shared/i18n/index.svelte";
+  import getUnicodeFlagIcon from "country-flag-icons/unicode";
+
+  const localeCountry: Record<string, string> = {
+    en: "US",
+    "pt-BR": "BR",
+    de: "DE",
+    es: "ES",
+    zh: "CN",
+    fr: "FR",
+    it: "IT",
+  };
 </script>
 
 <section class="flex flex-col gap-2 p-4 min-w-0 max-w-full box-border">
@@ -13,7 +24,7 @@
     onchange={(e) => i18n.setLocale((e.currentTarget as HTMLSelectElement).value as LocaleId)}
   >
     {#each Object.entries(locales) as [id, { name }] (id)}
-      <option value={id}>{name}</option>
+      <option value={id}>{getUnicodeFlagIcon(localeCountry[id])} {name}</option>
     {/each}
   </select>
 
