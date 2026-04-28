@@ -52,12 +52,30 @@ export async function getMtime(path: string): Promise<number> {
   return Number(v);
 }
 
+export async function openWithDefault(path: string): Promise<void> {
+  await invoke<void>('open_with_default', { path })
+}
+
+export async function revealInExplorer(path: string): Promise<void> {
+  await invoke<void>('reveal_in_explorer', { path })
+}
+
 /** Update the OS window title (e.g. show the currently-loaded config path). */
 export async function setWindowTitle(title: string): Promise<void> {
   try {
     await getCurrentWindow().setTitle(title);
   } catch {
     // No-op outside of a Tauri runtime (SSR/tests).
+  }
+}
+
+/** App version string from the Tauri runtime (falls back to "–" outside Tauri). */
+export async function getAppVersion(): Promise<string> {
+  try {
+    const { getVersion } = await import("@tauri-apps/api/app");
+    return await getVersion();
+  } catch {
+    return "–";
   }
 }
 
