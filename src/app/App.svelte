@@ -14,22 +14,22 @@
     reloadGlazeWM,
     setWindowTitle,
     getMtime,
+    openWithDefault,
+    revealInExplorer,
   } from "$shared/tauri";
   import Toggle from "$shared/ui/Toggle.svelte";
   import InfoIcon from "$shared/ui/InfoIcon.svelte";
   import TabBar from "$shared/ui/TabBar.svelte";
   import MenuBar from "$shared/ui/MenuBar.svelte";
   import GeneralTab from "$features/general";
-  import GapsTab from "$features/gaps";
-  import WindowEffectsTab from "$features/effects";
+  import { LayoutTab } from "$features/layout";
   import WorkspacesTab from "$features/workspaces";
   import KeybindingsTab from "$features/keybindings";
   import WindowRulesTab from "$features/rules";
   import SettingsTab from "$features/settings";
   import {
     Gear,
-    FrameCorners,
-    Palette,
+    Layout,
     SquaresFour,
     Keyboard,
     Funnel,
@@ -37,12 +37,13 @@
     ArrowUUpRight,
     Warning,
     Circle,
+    ArrowSquareOut,
+    FolderOpen,
   } from "phosphor-svelte";
 
   const tabs = $derived([
     { id: "general", label: i18n.t.tabs.general, icon: Gear },
-    { id: "gaps", label: i18n.t.tabs.gaps, icon: FrameCorners },
-    { id: "effects", label: i18n.t.tabs.effects, icon: Palette },
+    { id: "layout", label: i18n.t.tabs.layout, icon: Layout },
     { id: "workspaces", label: i18n.t.tabs.workspaces, icon: SquaresFour },
     { id: "keybindings", label: i18n.t.tabs.keybindings, icon: Keyboard },
     { id: "rules", label: i18n.t.tabs.rules, icon: Funnel },
@@ -51,6 +52,33 @@
   let active = $state("general");
   let status = $state<string>("");
   let historyOpen = $state(false);
+  let historyAnchorEl = $state<HTMLElement | null>(null);
+  let pathDraft = $state(store.configPath);
+
+  function onDocumentPointerDown(e: PointerEvent) {
+    if (!historyOpen) return;
+    if (historyAnchorEl && !historyAnchorEl.contains(e.target as Node)) {
+      historyOpen = false;
+    }
+  }
+
+  $effect(() => {
+    pathDraft = store.configPath;
+  });
+
+  async function loadFromPath() {
+    if (!pathDraft || pathDraft === store.configPath) return;
+    try {
+      const raw = await readConfig(pathDraft);
+      store.setConfig(pathDraft, parseConfig(raw));
+      knownMtime = await getMtime(pathDraft);
+      externalChanged = false;
+      status = i18n.t.status.loaded(pathDraft);
+    } catch (e) {
+      status = i18n.t.status.error(String(e));
+      pathDraft = store.configPath;
+    }
+  }
 
   // External-change detection: poll the file's mtime every 2s and surface a
   // banner when the on-disk file is newer than what we loaded/saved.
@@ -92,24 +120,6 @@
     else if (k === "s" && !e.shiftKey) { e.preventDefault(); saveFile(); }
     else if (k === "s" && e.shiftKey) { e.preventDefault(); saveAs(); }
     else if (k === "r" && !e.shiftKey) { e.preventDefault(); saveAndReload(); }
-  }
-
-  function isEditableEl(el: Element | null): boolean {
-    if (!el) return false;
-    const tag = el.tagName.toLowerCase();
-    return (
-      tag === "input" ||
-      tag === "textarea" ||
-      tag === "select" ||
-      (el as HTMLElement).isContentEditable
-    );
-  }
-
-  function onDocumentFocusOut(e: FocusEvent) {
-    if (!settings.liveMode || !store.isDirty || !store.config) return;
-    if (!isEditableEl(e.target as Element)) return;
-    if (isEditableEl(e.relatedTarget as Element)) return;
-    saveAndReload();
   }
 
   async function tryLoadDefault() {
@@ -218,14 +228,23 @@
     }, 2000);
     return () => clearInterval(id);
   });
+
+  // Live mode: debounced auto-save on any config change.
+  // Watches store.isDirty reactively — covers all interactions (toggles,
+  // selects, number spinners, add/remove, drag-reorder, undo/redo, etc.).
+  $effect(() => {
+    if (!settings.liveMode || !store.isDirty || !store.config) return;
+    const timer = setTimeout(() => saveAndReload(), 600);
+    return () => clearTimeout(timer);
+  });
 </script>
 
 <svelte:window onkeydown={onKeydown} />
-<svelte:document onfocusout={onDocumentFocusOut} />
+<svelte:document onpointerdown={onDocumentPointerDown} />
 
 <main class="grid grid-rows-[auto_auto_1fr_auto] h-screen w-full overflow-hidden min-w-0">
   <header class="flex items-center justify-between px-3 py-2 bg-[#1e1e1e] border-b border-[#333] gap-4">
-    <div class="relative">
+    <div class="relative" bind:this={historyAnchorEl}>
       <MenuBar
         configLoaded={!!store.config}
         canUndo={store.canUndo}
@@ -240,8 +259,14 @@
         onToggleHistory={() => (historyOpen = !historyOpen)}
       />
       {#if historyOpen}
+        {@const rect = historyAnchorEl?.getBoundingClientRect()}
+        {@const top = (rect?.bottom ?? 0) + 4}
+        {@const rawLeft = rect?.left ?? 0}
+        {@const maxLeft = window.innerWidth - 280 - 8}
+        {@const left = Math.max(8, Math.min(rawLeft, maxLeft))}
         <div
-          class="absolute top-[calc(100%+4px)] right-0 z-50 min-w-[240px] max-h-[60vh] overflow-auto bg-[#1e1e1e] border border-[#444] rounded-md shadow-[0_6px_20px_rgba(0,0,0,0.5)] p-[0.3rem] flex flex-col gap-[2px]"
+          style="top:{top}px; left:{left}px; max-height:calc(100dvh - {top}px - 8px)"
+          class="fixed z-50 w-[280px] overflow-auto bg-[#1e1e1e] border border-[#444] rounded-md shadow-[0_6px_20px_rgba(0,0,0,0.5)] p-[0.3rem] flex flex-col gap-[2px]"
           role="menu"
         >
           {#if store.future.length > 0}
@@ -333,15 +358,12 @@
           general={store.config.general}
           onPatch={(u) => store.patchConfig((c) => u(c.general), i18n.t.history.editGeneral)}
         />
-      {:else if active === "gaps"}
-        <GapsTab
+      {:else if active === "layout"}
+        <LayoutTab
           gaps={store.config.gaps}
-          onPatch={(u) => store.patchConfig((c) => u(c.gaps), i18n.t.history.editGaps)}
-        />
-      {:else if active === "effects"}
-        <WindowEffectsTab
           effects={store.config.window_effects}
-          onPatch={(u) => store.patchConfig((c) => u(c.window_effects), i18n.t.history.editEffects)}
+          onPatchGaps={(u) => store.patchConfig((c) => u(c.gaps), i18n.t.history.editGaps)}
+          onPatchEffects={(u) => store.patchConfig((c) => u(c.window_effects), i18n.t.history.editEffects)}
         />
       {:else if active === "workspaces"}
         <WorkspacesTab
@@ -370,5 +392,34 @@
     <div class="p-8 text-center text-[#888]">{i18n.t.app.loadingConfig}</div>
   {/if}
 
-  <footer class="px-3 py-[0.4rem] bg-[#1e1e1e] border-t border-[#333] text-[#aaa] text-[0.85rem] font-mono whitespace-nowrap overflow-hidden text-ellipsis">{status}</footer>
+  <footer class="flex items-center gap-2 px-3 py-[0.4rem] bg-[#1e1e1e] border-t border-[#333] text-[#aaa] text-[0.85rem] min-w-0">
+    <span class="shrink-0 font-mono whitespace-nowrap overflow-hidden text-ellipsis max-w-[30%]">{status}</span>
+    {#if store.configPath}
+      <input
+        type="text"
+        class="flex-1 min-w-0 bg-transparent border border-transparent hover:border-[#444] focus:border-[#0289a3] rounded px-1 text-[#aaa] font-mono text-[0.85rem] focus:outline-none"
+        value={pathDraft}
+        oninput={(e) => { pathDraft = e.currentTarget.value; }}
+        onkeydown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
+        onblur={loadFromPath}
+        aria-label="Config file path"
+      />
+    {/if}
+    <div class="flex gap-0.5 shrink-0">
+      <button
+        type="button"
+        title="Open with default application"
+        class="p-1 rounded cursor-pointer text-[#888] hover:text-[#ccc] hover:bg-[#2a2a2a] disabled:opacity-40 disabled:cursor-not-allowed"
+        onclick={() => store.configPath && openWithDefault(store.configPath)}
+        disabled={!store.configPath}
+      ><ArrowSquareOut size={14} /></button>
+      <button
+        type="button"
+        title="Reveal in Explorer"
+        class="p-1 rounded cursor-pointer text-[#888] hover:text-[#ccc] hover:bg-[#2a2a2a] disabled:opacity-40 disabled:cursor-not-allowed"
+        onclick={() => store.configPath && revealInExplorer(store.configPath)}
+        disabled={!store.configPath}
+      ><FolderOpen size={14} /></button>
+    </div>
+  </footer>
 </main>
