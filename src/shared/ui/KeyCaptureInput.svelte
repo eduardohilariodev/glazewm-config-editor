@@ -140,7 +140,7 @@
     </div>
     <button
       type="button"
-      class="inline-flex items-center justify-center px-2 py-[0.35rem] border border-[#444] rounded bg-[#2a2a2a] text-inherit cursor-pointer hover:bg-[#3a3a3a]"
+      class="inline-flex items-center justify-center aspect-square py-[0.4rem] px-[0.4rem] border border-[#444] rounded bg-[#2a2a2a] text-[#888] cursor-pointer hover:bg-[#3a3a3a] hover:text-inherit"
       onclick={startCapture}
       title="Capture key combo"
       aria-label="Capture key combo"
@@ -150,7 +150,7 @@
     {#if onRemove}
       <button
         type="button"
-        class="inline-flex items-center justify-center px-[0.5rem] py-[0.35rem] border border-[#444] rounded bg-[#2a2a2a] text-inherit cursor-pointer hover:bg-[#3a3a3a]"
+        class="inline-flex items-center justify-center aspect-square py-[0.4rem] px-[0.4rem] border border-[#444] rounded bg-[#2a2a2a] text-[#888] cursor-pointer hover:bg-[#3a3a3a] hover:text-[#f88] hover:border-[#f88]"
         onclick={onRemove}
         aria-label="Remove"
       ><X size={14} weight="bold" /></button>

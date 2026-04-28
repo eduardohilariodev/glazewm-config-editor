@@ -5,7 +5,7 @@
   import Stepper from "$shared/ui/Stepper.svelte";
   import InfoIcon from "$shared/ui/InfoIcon.svelte";
   import { setContext } from "svelte";
-  import { Plus, X } from "phosphor-svelte";
+  import { Plus, X, MagnifyingGlass } from "phosphor-svelte";
   import { i18n } from "$shared/i18n/index.svelte";
 
   interface Props {
@@ -54,12 +54,15 @@
 
 <section class="flex flex-col gap-4 p-4 min-w-0 max-w-full box-border">
   <div class="sticky top-0 z-10 -mx-4 -mt-4 px-4 py-3 bg-[#181818]/95 backdrop-blur border-b border-[#333] flex items-center gap-2">
-    <input
-      type="search"
-      placeholder={i18n.t.keybindings.filterPlaceholder}
-      bind:value={filter}
-      class="flex-1 min-w-0 box-border px-[0.6rem] py-[0.4rem] border border-[#444] rounded bg-[#1e1e1e] text-inherit font-[inherit] focus:border-[#0289a3] focus:outline-none placeholder:text-[#666]"
-    />
+    <div class="relative flex-1 min-w-0">
+      <MagnifyingGlass size={14} class="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#666] pointer-events-none" />
+      <input
+        type="search"
+        placeholder={i18n.t.keybindings.filterPlaceholder}
+        bind:value={filter}
+        class="w-full box-border pl-7 pr-[0.6rem] py-[0.4rem] border border-[#444] rounded bg-[#1e1e1e] text-inherit font-[inherit] focus:border-primary focus:outline-none placeholder:text-[#666]"
+      />
+    </div>
     {#if filter}
       <button
         type="button"
@@ -79,11 +82,12 @@
       class="border rounded-md p-4 flex flex-col gap-[0.85rem] {q && visible ? 'border-[#ffd97a]' : 'border-[#333]'}"
       class:hidden={!visible}
     >
-      <legend class="px-2 text-[#ccc] w-full flex items-center">
+      <legend class="px-2 text-[#ccc] w-full flex items-center gap-2">
         <span>{i18n.t.keybindings.keybindingTitle(i + 1)}</span>
+        <span class="flex-1 border-t border-[#444]"></span>
         <button
           type="button"
-          class="ml-auto inline-flex items-center gap-1 px-[0.4rem] py-[0.15rem] text-[0.75rem] border border-[#444] rounded bg-[#2a2a2a] text-[#f88] cursor-pointer hover:bg-[#3a3a3a]"
+          class="ml-auto inline-flex items-center gap-1 px-[0.4rem] py-[0.15rem] text-[0.75rem] border border-[#444] rounded bg-[#2a2a2a] text-[#888] cursor-pointer hover:bg-[#3a3a3a] hover:text-[#f88] hover:border-[#f88]"
           onclick={() => remove(i)}
         ><X size={11} weight="bold" />{i18n.t.keybindings.removeKeybinding}</button>
       </legend>

@@ -15,7 +15,7 @@
   import { setContext } from "svelte";
   import { startWindowPick, type PickerFocus } from "$shared/tauri";
   import { escapeLiteral, patternToTags, tagsToPattern } from "$shared/utils/regex";
-  import { Crosshair, Plus, X } from "phosphor-svelte";
+  import { Crosshair, Plus, X, MagnifyingGlass } from "phosphor-svelte";
   import { i18n } from "$shared/i18n/index.svelte";
 
   interface Props {
@@ -228,12 +228,15 @@
 
 <section class="flex flex-col gap-4 p-4 min-w-0 max-w-full box-border">
   <div class="sticky top-0 z-10 -mx-4 -mt-4 px-4 py-3 bg-[#181818]/95 backdrop-blur border-b border-[#333] flex items-center gap-2">
-    <input
-      type="search"
-      placeholder={i18n.t.rules.filterPlaceholder}
-      bind:value={filter}
-      class="flex-1 min-w-0 box-border px-[0.6rem] py-[0.4rem] border border-[#444] rounded bg-[#1e1e1e] text-inherit font-[inherit] focus:border-[#0289a3] focus:outline-none placeholder:text-[#666]"
-    />
+    <div class="relative flex-1 min-w-0">
+      <MagnifyingGlass size={14} class="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#666] pointer-events-none" />
+      <input
+        type="search"
+        placeholder={i18n.t.rules.filterPlaceholder}
+        bind:value={filter}
+        class="w-full box-border pl-7 pr-[0.6rem] py-[0.4rem] border border-[#444] rounded bg-[#1e1e1e] text-inherit font-[inherit] focus:border-primary focus:outline-none placeholder:text-[#666]"
+      />
+    </div>
     {#if filter}
       <button
         type="button"
@@ -253,11 +256,12 @@
       class="border rounded-md p-4 flex flex-col gap-3 {q && visible ? 'border-[#ffd97a]' : 'border-[#333]'}"
       class:hidden={!visible}
     >
-      <legend class="px-2 text-[#ccc] w-full flex items-center">
+      <legend class="px-2 text-[#ccc] w-full flex items-center gap-2">
         <span>{i18n.t.rules.ruleTitle(i + 1)}</span>
+        <span class="flex-1 border-t border-[#444]"></span>
         <button
           type="button"
-          class="ml-auto inline-flex items-center gap-1 px-[0.4rem] py-[0.15rem] text-[0.75rem] border border-[#444] rounded bg-[#2a2a2a] text-[#f88] cursor-pointer hover:bg-[#3a3a3a]"
+          class="ml-auto inline-flex items-center gap-1 px-[0.4rem] py-[0.15rem] text-[0.75rem] border border-[#444] rounded bg-[#2a2a2a] text-[#888] cursor-pointer hover:bg-[#3a3a3a] hover:text-[#f88] hover:border-[#f88]"
           onclick={() => removeRule(i)}
         ><X size={11} weight="bold" />{i18n.t.rules.removeRule}</button>
       </legend>
@@ -284,7 +288,19 @@
         <span class="text-[0.85rem] text-[#888]">{i18n.t.rules.matchConditions}</span>
         {#each rule.match as m, j (j)}
           <div class="border border-dashed border-[#333] rounded p-[0.6rem] flex flex-col gap-[0.6rem]">
-            <span class="text-[0.75rem] uppercase tracking-wide text-[#888]">{i18n.t.rules.conditionTitle(j + 1)}</span>
+            <div class="flex items-center gap-2">
+              <span class="text-[0.75rem] uppercase tracking-wide text-[#888]">{i18n.t.rules.conditionTitle(j + 1)}</span>
+              <span class="flex-1 border-t border-[#333]"></span>
+              {#if rule.match.length > 1}
+                <button
+                  type="button"
+                  class="inline-flex items-center gap-1 px-[0.4rem] py-[0.15rem] text-[0.75rem] border border-[#444] rounded bg-[#2a2a2a] text-[#888] cursor-pointer hover:bg-[#3a3a3a] hover:text-[#f88] hover:border-[#f88]"
+                  onclick={() => removeMatch(i, j)}
+                  title={i18n.t.rules.removeCondition}
+                  aria-label={i18n.t.rules.removeCondition}
+                ><X size={11} weight="bold" />{i18n.t.rules.removeCondition}</button>
+              {/if}
+            </div>
             {#each FIELDS as key (key)}
               {@const op = getOp(m, key)}
               {@const value = getValue(m, key)}
@@ -367,16 +383,7 @@
                 </div>
               </div>
             {/each}
-            {#if rule.match.length > 1}
-              <button
-                type="button"
-                class="self-end inline-flex items-center justify-center p-[0.35rem] border border-[#444] rounded bg-[#2a2a2a] text-[#f88] cursor-pointer hover:bg-[#3a3a3a] hover:border-[#f88]"
-                onclick={() => removeMatch(i, j)}
-                title={i18n.t.rules.removeCondition}
-                aria-label={i18n.t.rules.removeCondition}
-              ><X size={14} weight="bold" /></button>
-            {/if}
-          </div>
+            </div>
         {/each}
         <button
           type="button"

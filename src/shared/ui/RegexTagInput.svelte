@@ -11,7 +11,7 @@
   import { settings } from "$shared/store/settings.svelte";
   import HighlightedInput from "$shared/ui/HighlightedInput.svelte";
   import { getContext, untrack } from "svelte";
-  import { Tag, Asterisk, Warning, X } from "phosphor-svelte";
+  import { Tag, Asterisk, Warning, X, MagnifyingGlass } from "phosphor-svelte";
 
   const getQ = getContext<() => string>("filter:q");
   let outerQ = $derived(getQ ? getQ() : "");
@@ -191,13 +191,16 @@
       </span>
     {/if}
     {#if mode === "tags" && tags.length > 0}
-      <input
-        class="filter ml-auto px-2 py-[0.2rem] border border-[#444] rounded bg-[#1e1e1e] text-[#e8e8e8] font-[inherit] text-[0.8rem] min-w-[8rem] max-w-[14rem] outline-none focus:border-[#0289a3] transition-colors duration-[120ms] placeholder:text-[#777]"
-        type="search"
-        bind:value={filter}
-        placeholder="Filter tags…"
-        aria-label="Filter tags"
-      />
+      <div class="relative ml-auto">
+        <MagnifyingGlass size={12} class="absolute left-2 top-1/2 -translate-y-1/2 text-[#666] pointer-events-none" />
+        <input
+          class="filter pl-6 pr-2 py-[0.2rem] border border-[#444] rounded bg-[#1e1e1e] text-[#e8e8e8] font-[inherit] text-[0.8rem] min-w-[8rem] max-w-[14rem] outline-none focus:border-primary transition-colors duration-[120ms] placeholder:text-[#777]"
+          type="search"
+          bind:value={filter}
+          placeholder="Filter tags…"
+          aria-label="Filter tags"
+        />
+      </div>
     {/if}
   </div>
 
