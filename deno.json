@@ -1,0 +1,22 @@
+{
+  "nodeModulesDir": "auto",
+  "tasks": {
+    "tauri": "deno run -A --node-modules-dir npm:@tauri-apps/cli",
+    "dev": "deno run -A --node-modules-dir npm:vite dev",
+    "build": "deno run -A --node-modules-dir npm:vite build",
+    "preview": "deno run -A --node-modules-dir npm:vite preview",
+    "check": "deno run -A --node-modules-dir npm:svelte-kit sync && deno run -A --node-modules-dir npm:svelte-check --tsconfig ./tsconfig.json"
+  },
+  "compilerOptions": {
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "moduleDetection": "force",
+    "strict": true,
+    "checkJs": false
+  },
+  "fmt": {
+    "exclude": ["build/", ".svelte-kit/", "src-tauri/target/", "node_modules/"]
+  },
+  "lint": {
+    "exclude": ["build/", ".svelte-kit/", "src-tauri/target/", "node_modules/"]
+  }
+}
