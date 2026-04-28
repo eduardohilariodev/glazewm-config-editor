@@ -1,11 +1,15 @@
 {
   "nodeModulesDir": "auto",
+  "imports": {
+    "@sveltejs/adapter-static": "npm:@sveltejs/adapter-static",
+    "@sveltejs/vite-plugin-svelte": "npm:@sveltejs/vite-plugin-svelte"
+  },
   "tasks": {
     "tauri": "deno run -A --node-modules-dir npm:@tauri-apps/cli",
     "dev": "deno run -A --node-modules-dir npm:vite dev",
     "build": "deno run -A --node-modules-dir npm:vite build",
     "preview": "deno run -A --node-modules-dir npm:vite preview",
-    "check": "deno run -A --node-modules-dir npm:svelte-kit sync && deno run -A --node-modules-dir npm:svelte-check --tsconfig ./tsconfig.json"
+    "check": "deno run -A --node-modules-dir npm:@sveltejs/kit sync && deno run -A --node-modules-dir npm:svelte-check --tsconfig ./tsconfig.json"
   },
   "compilerOptions": {
     "lib": ["ESNext", "DOM", "DOM.Iterable"],

@@ -1,9 +1,11 @@
 {
   "version": "5",
   "specifiers": {
+    "npm:@sveltejs/adapter-static@*": "3.0.10_@sveltejs+kit@2.58.0__@sveltejs+vite-plugin-svelte@5.1.1___svelte@5.55.5___vite@6.4.2__svelte@5.55.5__typescript@5.6.3__vite@6.4.2_@sveltejs+vite-plugin-svelte@5.1.1__svelte@5.55.5__vite@6.4.2_svelte@5.55.5_typescript@5.6.3_vite@6.4.2",
     "npm:@sveltejs/adapter-static@^3.0.6": "3.0.10_@sveltejs+kit@2.58.0__@sveltejs+vite-plugin-svelte@5.1.1___svelte@5.55.5___vite@6.4.2__svelte@5.55.5__typescript@5.6.3__vite@6.4.2_@sveltejs+vite-plugin-svelte@5.1.1__svelte@5.55.5__vite@6.4.2_svelte@5.55.5_typescript@5.6.3_vite@6.4.2",
     "npm:@sveltejs/kit@*": "2.58.0_@sveltejs+vite-plugin-svelte@5.1.1__svelte@5.55.5__vite@6.4.2_svelte@5.55.5_typescript@5.6.3_vite@6.4.2",
     "npm:@sveltejs/kit@^2.9.0": "2.58.0_@sveltejs+vite-plugin-svelte@5.1.1__svelte@5.55.5__vite@6.4.2_svelte@5.55.5_typescript@5.6.3_vite@6.4.2",
+    "npm:@sveltejs/vite-plugin-svelte@*": "5.1.1_svelte@5.55.5_vite@6.4.2",
     "npm:@sveltejs/vite-plugin-svelte@5": "5.1.1_svelte@5.55.5_vite@6.4.2",
     "npm:@tailwindcss/vite@^4.2.4": "4.2.4_vite@6.4.2",
     "npm:@tauri-apps/api@2": "2.10.1",
@@ -980,6 +982,10 @@
     }
   },
   "workspace": {
+    "dependencies": [
+      "npm:@sveltejs/adapter-static@*",
+      "npm:@sveltejs/vite-plugin-svelte@*"
+    ],
     "packageJson": {
       "dependencies": [
         "npm:@sveltejs/adapter-static@^3.0.6",
