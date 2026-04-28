@@ -12,9 +12,7 @@
   import Stepper from "$lib/components/ui/Stepper.svelte";
   import HighlightedInput from "$lib/components/ui/HighlightedInput.svelte";
   import { setContext } from "svelte";
-  import { invoke } from "@tauri-apps/api/core";
-  import { listen, type UnlistenFn } from "@tauri-apps/api/event";
-  import { getCurrentWindow } from "@tauri-apps/api/window";
+  import { startWindowPick } from "$lib/utils/tauri";
   import { Crosshair } from "phosphor-svelte";
 
   interface Props {
@@ -129,57 +127,65 @@
   }
 
   // Window picker ──────────────────────────────────────────────────────────
-  type PickedWindow = {
-    process: string;
-    class_name: string;
-    title: string;
-    cancelled: boolean;
-  };
+  type PickAction = "replace" | "append";
+  let pickingAt = $state<{ i: number; j: number; key: FieldKey } | null>(null);
+  let menuOpenAt = $state<{ i: number; j: number; key: FieldKey } | null>(null);
 
-  let pickingAt = $state<{ i: number; j: number } | null>(null);
-
-  function applyPicked(m: WindowMatchConfig, key: FieldKey, value: string) {
-    if (!value) return;
-    const op = getOp(m, key);
-    m[key] = makeMatch(op === "regex" || op === "not_regex" ? "equals" : op, value);
+  function isMenuOpen(i: number, j: number, key: FieldKey): boolean {
+    return menuOpenAt?.i === i && menuOpenAt?.j === j && menuOpenAt?.key === key;
+  }
+  function toggleMenu(i: number, j: number, key: FieldKey) {
+    menuOpenAt = isMenuOpen(i, j, key) ? null : { i, j, key };
+  }
+  function closeMenu() {
+    menuOpenAt = null;
   }
 
-  async function pickWindow(i: number, j: number) {
+  async function pickWindow(i: number, j: number, key: FieldKey, action: PickAction) {
     if (pickingAt) return;
-    pickingAt = { i, j };
-    const win = getCurrentWindow();
-    let unlisten: UnlistenFn | null = null;
-    const cleanup = async () => {
-      if (unlisten) {
-        unlisten();
-        unlisten = null;
-      }
-      try {
-        await win.unminimize();
-        await win.setFocus();
-      } catch {
-        // ignore
-      }
-      pickingAt = null;
-    };
-    unlisten = await listen<PickedWindow>("window-picked", async ({ payload }) => {
-      await cleanup();
-      if (payload.cancelled) return;
-      onPatch((rs) => {
-        const m = rs[i].match[j];
-        applyPicked(m, "window_process", payload.process);
-        applyPicked(m, "window_class", payload.class_name);
-        applyPicked(m, "window_title", payload.title);
-      });
-    });
+    closeMenu();
+    pickingAt = { i, j, key };
     try {
-      await win.minimize();
-      await invoke("start_window_pick");
-    } catch (e) {
-      console.error("window picker failed:", e);
-      await cleanup();
+      const result = await startWindowPick();
+      if (!result) return;
+      const { process, class_name, title } = result;
+      if (action === "replace") {
+        onPatch((rs) => {
+          const m = rs[i].match[j];
+          const apply = (k: FieldKey, v: string) => {
+            if (!v) return;
+            const op = getOp(m, k);
+            m[k] = makeMatch(op === "regex" || op === "not_regex" ? "equals" : op, v);
+          };
+          apply("window_process", process);
+          apply("window_class", class_name);
+          apply("window_title", title);
+        });
+      } else {
+        onPatch((rs) => {
+          const next: WindowMatchConfig = {};
+          if (process) next.window_process = makeMatch("equals", process);
+          if (class_name) next.window_class = makeMatch("equals", class_name);
+          if (title) next.window_title = makeMatch("equals", title);
+          rs[i].match.push(next);
+        });
+      }
+    } finally {
+      pickingAt = null;
     }
   }
+
+  $effect(() => {
+    if (!menuOpenAt) return;
+    const onDocClick = () => closeMenu();
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") closeMenu(); };
+    document.addEventListener("click", onDocClick);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("click", onDocClick);
+      document.removeEventListener("keydown", onKey);
+    };
+  });
 </script>
 
 <section class="flex flex-col gap-4 p-4 min-w-0 max-w-full box-border">
@@ -229,24 +235,13 @@
         <span class="text-[0.85rem] text-[#888]">Match conditions</span>
         {#each rule.match as m, j (j)}
           <div class="border border-dashed border-[#333] rounded p-[0.6rem] flex flex-col gap-[0.6rem]">
-            <div class="flex items-center justify-between gap-2">
-              <span class="text-[0.75rem] uppercase tracking-wide text-[#888]">Condition #{j + 1}</span>
-              <button
-                type="button"
-                title="Pick a window with the mouse to fill process, class, and title. Right-click to cancel."
-                class="inline-flex items-center gap-[0.4rem] px-[0.6rem] py-[0.3rem] text-[0.85rem] border border-[#444] rounded bg-[#2a2a2a] text-inherit cursor-pointer hover:bg-[#3a3a3a] disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={pickingAt !== null}
-                onclick={() => pickWindow(i, j)}
-              >
-                <Crosshair size={14} weight="bold" />
-                {pickingAt && pickingAt.i === i && pickingAt.j === j ? "Click target window…" : "Pick window"}
-              </button>
-            </div>
+            <span class="text-[0.75rem] uppercase tracking-wide text-[#888]">Condition #{j + 1}</span>
             {#each FIELDS as key (key)}
               {@const op = getOp(m, key)}
               {@const value = getValue(m, key)}
-              <div class="grid grid-cols-[6rem_8rem_1fr] gap-[0.6rem] items-start">
-                <span class="text-[#aaa] text-[0.85rem] pt-[0.4rem]">{FIELD_LABEL[key]}</span>
+              {@const isPickingThis = pickingAt?.i === i && pickingAt?.j === j && pickingAt?.key === key}
+              <div class="grid grid-cols-[6rem_8rem_1fr_auto] gap-[0.6rem] items-center">
+                <span class="text-[#aaa] text-[0.85rem]">{FIELD_LABEL[key]}</span>
                 <select
                   class="w-full box-border px-[0.6rem] py-[0.4rem] border border-[#444] rounded bg-[#1e1e1e] text-inherit font-[inherit]"
                   value={op}
@@ -279,6 +274,47 @@
                       sharedClass="font-[inherit] text-inherit text-[1rem]"
                       onInput={(v) => setField(i, j, key, op, v)}
                     />
+                  {/if}
+                </div>
+                <div class="relative">
+                  <button
+                    type="button"
+                    title={isPickingThis
+                      ? "Click any window… right-click to cancel"
+                      : "Pick from a window"}
+                    aria-label="Pick window"
+                    aria-haspopup="menu"
+                    aria-expanded={isMenuOpen(i, j, key)}
+                    class="inline-flex items-center justify-center p-[0.35rem] border rounded bg-[#2a2a2a] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed {isPickingThis ? 'border-[#ffd97a] text-[#ffd97a] animate-pulse' : isMenuOpen(i, j, key) ? 'border-[#3a6aa0] text-inherit' : 'border-[#444] text-inherit hover:bg-[#3a3a3a]'}"
+                    disabled={pickingAt !== null}
+                    onclick={(e) => {
+                      e.stopPropagation();
+                      toggleMenu(i, j, key);
+                    }}
+                  >
+                    <Crosshair size={14} weight="bold" />
+                  </button>
+                  {#if isMenuOpen(i, j, key)}
+                    <div
+                      role="menu"
+                      tabindex="-1"
+                      class="absolute right-0 top-full mt-1 z-20 min-w-[14rem] flex flex-col border border-[#444] rounded bg-[#1e1e1e] shadow-lg overflow-hidden"
+                      onclick={(e) => e.stopPropagation()}
+                      onkeydown={(e) => e.stopPropagation()}
+                    >
+                      <button
+                        type="button"
+                        role="menuitem"
+                        class="text-left px-[0.7rem] py-[0.45rem] text-[0.85rem] text-inherit hover:bg-[#2a2a2a] cursor-pointer"
+                        onclick={() => pickWindow(i, j, key, "replace")}
+                      >Replace all with window property</button>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        class="text-left px-[0.7rem] py-[0.45rem] text-[0.85rem] text-inherit hover:bg-[#2a2a2a] cursor-pointer border-t border-[#333]"
+                        onclick={() => pickWindow(i, j, key, "append")}
+                      >Append to list</button>
+                    </div>
                   {/if}
                 </div>
               </div>
