@@ -31,17 +31,35 @@ Re-run `deno install` whenever `deno.json` or `deno.lock` changes.
 
 ## Folder map
 
-| Path | Responsibility |
-|---|---|
-| `src/lib/types/config.ts` | Single source of truth for all GlazeWM YAML types |
-| `src/lib/stores/config.svelte.ts` | All runtime app state via Svelte 5 `$state` runes |
-| `src/lib/utils/yaml.ts` | **Only** place `yaml.load` / `yaml.dump` are called |
-| `src/lib/utils/tauri.ts` | **Only** place `invoke()` and dialog APIs are called |
-| `src/lib/components/tabs/` | One `.svelte` per config section — purely presentational |
-| `src/lib/components/ui/` | Shared primitives: Toggle, TextInput, ColorPicker, etc. |
-| `src/routes/+page.svelte` | Root: toolbar + TabBar + active tab mount |
-| `src-tauri/src/commands/` | `read_config` + `write_config` Tauri commands — all file I/O lives here |
-| `src-tauri/src/lib.rs` | Plugin init + `invoke_handler` registration — no logic |
+The project follows **Feature-Sliced Design** (FSD). Layers form a strict
+one-way dependency graph: `app → features → shared`. Nothing flows upward; no
+feature imports another feature.
+
+| Path | Layer | Responsibility |
+|---|---|---|
+| `src/shared/types/config.ts` | shared | Single source of truth for all GlazeWM YAML types |
+| `src/shared/store/config.svelte.ts` | shared | Global config rune store + undo/redo |
+| `src/shared/store/settings.svelte.ts` | shared | App-wide settings rune store |
+| `src/shared/yaml/` | shared | **Only** place `yaml.load` / `yaml.dump` are called |
+| `src/shared/tauri/` | shared | **Only** place `invoke()` and dialog APIs are called |
+| `src/shared/i18n/` | shared | Locale store + `locales/*.ts` dictionaries |
+| `src/shared/ui/` | shared | Generic UI primitives (Toggle, TextInput, ColorPicker, …) |
+| `src/shared/utils/` | shared | Framework-agnostic helpers (regex, masks, command codecs) |
+| `src/features/<name>/` | features | One folder per config tab. Owns its tab component, any private sub-components and feature-private utilities |
+| `src/features/<name>/index.ts` | features | **Public API.** Other layers may only import from this barrel |
+| `src/app/App.svelte` | app | Root composition: toolbar + TabBar + active tab mount |
+| `src/routes/+page.svelte` | app | Thin SvelteKit shim — renders `<App />` only |
+| `src/routes/picker/` | app | Overlay window route consumed by Tauri's window-picker feature |
+| `src-tauri/src/commands/` | rust | Thin `#[tauri::command]` adapters — validate/parse args, delegate to services, map errors |
+| `src-tauri/src/services/` | rust | All actual logic (filesystem, process, validation). No Tauri types here |
+| `src-tauri/src/error.rs` | rust | Centralized `AppError` with `thiserror`. Commands map it to `String` at the FFI boundary |
+| `src-tauri/src/lib.rs` | rust | Plugin init + `invoke_handler` registration only |
+
+**Path aliases** (configured in `svelte.config.js`):
+
+- `$shared/*` → `src/shared/*`
+- `$features/*` → `src/features/*`
+- `$lib/*` → `src/shared/*` (legacy compatibility — prefer `$shared`)
 
 Frontend lives under `src/` (SvelteKit). Static assets in `static/`. Vite output goes to `build/` (referenced by Tauri's `frontendDist`).
 Tauri/Rust backend lives under `src-tauri/`. Plugins in use: `tauri-plugin-fs`, `tauri-plugin-dialog`, `tauri-plugin-updater`.
@@ -50,13 +68,15 @@ Tauri/Rust backend lives under `src-tauri/`. Plugins in use: `tauri-plugin-fs`, 
 
 These are hard constraints. Never violate them regardless of the task.
 
-1. **Tab components are purely presentational.** They receive a config slice via props and emit changes via an `onPatch` callback prop. They never import the store or call `invoke()` directly.
-2. **`invoke()` is called only in `src/lib/utils/tauri.ts`.** Any new Tauri command must be wrapped there before being used elsewhere. Never use Node `fs` from the frontend.
-3. **`yaml.load` / `yaml.dump` are called only in `src/lib/utils/yaml.ts`.** No inline YAML serialisation anywhere else.
-4. **State mutations go through `patchConfig()` in the rune store.** Direct mutation of the exported `config` object outside the store is forbidden.
-5. **File I/O lives only in `src-tauri/src/commands/`.** `lib.rs` only registers commands — no reads, writes, or filesystem logic.
-6. **`src/lib/types/config.ts` is the single type contract.** When the GlazeWM schema changes, update types here first, then fix all downstream TypeScript errors.
-7. **Default GlazeWM config path is `%UserProfile%\.glzr\glazewm\config.yaml`.** Use Tauri's path APIs to resolve it — never hardcode `C:\Users\...`.
+1. **One-way dependency graph.** `app → features → shared`. Nothing flows upward; features must not import other features.
+2. **Public-API rule.** A feature's only importable entry point is its `index.ts` barrel. Importing internal files of another feature is forbidden.
+3. **Tab components are purely presentational.** They receive a config slice via props and emit changes via an `onPatch` callback prop. They never import the store or call `invoke()` directly.
+4. **`invoke()` is called only in `src/shared/tauri/`.** Any new Tauri command must be wrapped there before being used elsewhere. Never use Node `fs` from the frontend.
+5. **`yaml.load` / `yaml.dump` are called only in `src/shared/yaml/`.** No inline YAML serialisation anywhere else.
+6. **State mutations go through `patchConfig()` in the rune store.** Direct mutation of the exported `config` object outside the store is forbidden.
+7. **Filesystem and process I/O live only in `src-tauri/src/services/`.** Commands are thin adapters; `lib.rs` only registers them.
+8. **`src/shared/types/config.ts` is the single type contract.** When the GlazeWM schema changes, update types here first, then fix all downstream TypeScript errors.
+9. **Default GlazeWM config path is `%UserProfile%\.glzr\glazewm\config.yaml`.** Use Tauri's path APIs to resolve it — never hardcode `C:\Users\...`.
 
 ## Svelte 5 rules
 
@@ -75,9 +95,10 @@ These are hard constraints. Never violate them regardless of the task.
 
 ## Rust rules
 
-- All `#[tauri::command]` functions return `Result<T, String>`.
-- Never use `.unwrap()` or `.expect()` in command functions — use `map_err`.
-- File writes must be atomic: write to `path.yaml.tmp`, then `fs::rename` to the target.
+- All `#[tauri::command]` functions return `Result<T, String>` and act as thin adapters: validate input, call into `services::*`, map `AppError` to `String`.
+- Errors use the centralized `AppError` enum in `src-tauri/src/error.rs` (powered by `thiserror`). Add new variants there rather than scattering ad-hoc error strings.
+- Never use `.unwrap()` or `.expect()` in command or service functions — use `?` with `AppError`'s `From` impls or `map_err`.
+- File writes must be atomic: write to `path.yaml.tmp`, then `fs::rename` to the target. This lives in `services::config::write`.
 - Keep `Cargo.toml` dependencies pinned to major version (e.g. `tauri = "2"`), not exact.
 - Run `cargo clippy -- -D warnings` before committing. All warnings are errors.
 

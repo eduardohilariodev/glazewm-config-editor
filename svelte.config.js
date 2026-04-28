@@ -12,6 +12,16 @@ const config = {
     adapter: adapter({
       fallback: "index.html",
     }),
+    files: {
+      // FSD architecture: shared layer replaces the legacy $lib folder.
+      lib: "src/shared",
+    },
+    alias: {
+      $shared: "src/shared",
+      "$shared/*": "src/shared/*",
+      $features: "src/features",
+      "$features/*": "src/features/*",
+    },
   },
 };
 
