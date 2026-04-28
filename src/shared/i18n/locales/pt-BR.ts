@@ -27,12 +27,14 @@ const ptBR: Dictionary = {
   },
   tabs: {
     general: "Geral",
+    layout: "Layout",
     gaps: "Espaçamentos",
     effects: "Efeitos de janela",
     workspaces: "Áreas de trabalho",
     keybindings: "Atalhos",
     rules: "Regras de janela",
     settings: "Configurações",
+
   },
   general: {
     startupCommands: "Comandos de inicialização",
@@ -150,6 +152,7 @@ const ptBR: Dictionary = {
     autoSortRawHintAfter:
       " no modo regex bruto são ordenadas ao perder o foco. A ordem não afeta a correspondência no motor de regex do Rust, então é apenas cosmético.",
   },
+
   picker: {
     process: "processo",
     class: "classe",
@@ -221,6 +224,16 @@ const ptBR: Dictionary = {
     removeAria: "Remover",
     add: "Adicionar",
     clear: "Limpar",
+  },
+  help: {
+    menu: "Ajuda",
+    glazewmGitHub: "GlazeWM no GitHub",
+    editorGitHub: "Config Editor no GitHub",
+    about: "Sobre…",
+    aboutTitle: "Sobre o GlazeWM Config Editor",
+    version: (v) => `Versão ${v}`,
+    madeBy: "Criado por",
+    license: "Licença MIT",
   },
   status: {
     loaded: (path) => `Carregado ${path}`,

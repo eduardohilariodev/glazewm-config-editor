@@ -35,6 +35,7 @@ export interface Dictionary {
   };
   tabs: {
     general: string;
+    layout: string;
     gaps: string;
     effects: string;
     workspaces: string;
@@ -222,6 +223,16 @@ export interface Dictionary {
     removeAria: string;
     add: string;
     clear: string;
+  };
+  help: {
+    menu: string;
+    glazewmGitHub: string;
+    editorGitHub: string;
+    about: string;
+    aboutTitle: string;
+    version: (v: string) => string;
+    madeBy: string;
+    license: string;
   };
   status: {
     loaded: (path: string) => string;

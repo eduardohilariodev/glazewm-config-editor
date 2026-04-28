@@ -28,12 +28,14 @@ const it: Dictionary = {
   },
   tabs: {
     general: "Generale",
+    layout: "Layout",
     gaps: "Spaziature",
     effects: "Effetti finestra",
     workspaces: "Aree di lavoro",
     keybindings: "Scorciatoie",
     rules: "Regole finestra",
     settings: "Impostazioni",
+
   },
   general: {
     startupCommands: "Comandi all’avvio",
@@ -151,6 +153,7 @@ const it: Dictionary = {
     autoSortRawHintAfter:
       " in modalità regex grezza vengono ordinate al blur. L’ordine non influisce sul matching nel motore regex di Rust, è solo estetico.",
   },
+
   picker: {
     process: "processo",
     class: "classe",
@@ -222,6 +225,16 @@ const it: Dictionary = {
     removeAria: "Rimuovi",
     add: "Aggiungi",
     clear: "Pulisci",
+  },
+  help: {
+    menu: "Aiuto",
+    glazewmGitHub: "GlazeWM su GitHub",
+    editorGitHub: "Config Editor su GitHub",
+    about: "Informazioni…",
+    aboutTitle: "Informazioni su GlazeWM Config Editor",
+    version: (v) => `Versione ${v}`,
+    madeBy: "Sviluppato da",
+    license: "Licenza MIT",
   },
   status: {
     loaded: (path) => `Caricato ${path}`,

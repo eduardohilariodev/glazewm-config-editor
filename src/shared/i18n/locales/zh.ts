@@ -25,12 +25,14 @@ const zh: Dictionary = {
   },
   tabs: {
     general: "常规",
+    layout: "布局",
     gaps: "间距",
     effects: "窗口效果",
     workspaces: "工作区",
     keybindings: "快捷键",
     rules: "窗口规则",
     settings: "设置",
+
   },
   general: {
     startupCommands: "启动命令",
@@ -146,6 +148,7 @@ const zh: Dictionary = {
     autoSortRawHintAfter:
       " 分隔的顶级可选项会在失焦时被排序。顺序不影响 Rust 正则引擎的匹配结果，因此只是外观调整。",
   },
+
   picker: {
     process: "进程",
     class: "类名",
@@ -214,6 +217,16 @@ const zh: Dictionary = {
     removeAria: "移除",
     add: "添加",
     clear: "清除",
+  },
+  help: {
+    menu: "帮助",
+    glazewmGitHub: "GlazeWM GitHub 页面",
+    editorGitHub: "配置编辑器 GitHub 页面",
+    about: "关于…",
+    aboutTitle: "关于 GlazeWM Config Editor",
+    version: (v) => `版本 ${v}`,
+    madeBy: "开发者",
+    license: "MIT 许可证",
   },
   status: {
     loaded: (path) => `已加载 ${path}`,
