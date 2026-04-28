@@ -8,3 +8,35 @@ node_modules
 !.env.example
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Tauri signing keys — never commit these
+*.key
+*.key.pub
+
+# Rust / Tauri
+src-tauri/target/
+src-tauri/gen/schemas/
+*.pdb
+
+# OS
+Thumbs.db
+desktop.ini
+
+# Editors
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/launch.json
+
+# Logs / caches
+*.log
+.cache/
+coverage/
+
+# Tauri release artifacts
+release/
+dist-tauri/
+
+# Deno
+.deno/
