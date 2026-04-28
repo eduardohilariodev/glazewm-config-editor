@@ -12,6 +12,10 @@
   import Stepper from "$lib/components/ui/Stepper.svelte";
   import HighlightedInput from "$lib/components/ui/HighlightedInput.svelte";
   import { setContext } from "svelte";
+  import { invoke } from "@tauri-apps/api/core";
+  import { listen, type UnlistenFn } from "@tauri-apps/api/event";
+  import { getCurrentWindow } from "@tauri-apps/api/window";
+  import { Crosshair } from "phosphor-svelte";
 
   interface Props {
     rules: WindowRuleConfig[];
@@ -123,6 +127,59 @@
   function removeMatch(i: number, j: number) {
     onPatch((rs) => rs[i].match.splice(j, 1));
   }
+
+  // Window picker ──────────────────────────────────────────────────────────
+  type PickedWindow = {
+    process: string;
+    class_name: string;
+    title: string;
+    cancelled: boolean;
+  };
+
+  let pickingAt = $state<{ i: number; j: number } | null>(null);
+
+  function applyPicked(m: WindowMatchConfig, key: FieldKey, value: string) {
+    if (!value) return;
+    const op = getOp(m, key);
+    m[key] = makeMatch(op === "regex" || op === "not_regex" ? "equals" : op, value);
+  }
+
+  async function pickWindow(i: number, j: number) {
+    if (pickingAt) return;
+    pickingAt = { i, j };
+    const win = getCurrentWindow();
+    let unlisten: UnlistenFn | null = null;
+    const cleanup = async () => {
+      if (unlisten) {
+        unlisten();
+        unlisten = null;
+      }
+      try {
+        await win.unminimize();
+        await win.setFocus();
+      } catch {
+        // ignore
+      }
+      pickingAt = null;
+    };
+    unlisten = await listen<PickedWindow>("window-picked", async ({ payload }) => {
+      await cleanup();
+      if (payload.cancelled) return;
+      onPatch((rs) => {
+        const m = rs[i].match[j];
+        applyPicked(m, "window_process", payload.process);
+        applyPicked(m, "window_class", payload.class_name);
+        applyPicked(m, "window_title", payload.title);
+      });
+    });
+    try {
+      await win.minimize();
+      await invoke("start_window_pick");
+    } catch (e) {
+      console.error("window picker failed:", e);
+      await cleanup();
+    }
+  }
 </script>
 
 <section class="flex flex-col gap-4 p-4 min-w-0 max-w-full box-border">
@@ -145,7 +202,7 @@
   {#each rules as rule, i (i)}
     {@const visible = matches(rule)}
     <fieldset
-      class="border rounded-md p-4 flex flex-col gap-3 {q && visible ? 'border-[#ffd97a] shadow-[inset_0_0_0_1px_#ffd97a]' : 'border-[#333]'}"
+      class="border rounded-md p-4 flex flex-col gap-3 {q && visible ? 'border-[#ffd97a]' : 'border-[#333]'}"
       class:hidden={!visible}
     >
       <legend class="px-2 text-[#ccc]">Rule #{i + 1}</legend>
@@ -172,6 +229,19 @@
         <span class="text-[0.85rem] text-[#888]">Match conditions</span>
         {#each rule.match as m, j (j)}
           <div class="border border-dashed border-[#333] rounded p-[0.6rem] flex flex-col gap-[0.6rem]">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-[0.75rem] uppercase tracking-wide text-[#888]">Condition #{j + 1}</span>
+              <button
+                type="button"
+                title="Pick a window with the mouse to fill process, class, and title. Right-click to cancel."
+                class="inline-flex items-center gap-[0.4rem] px-[0.6rem] py-[0.3rem] text-[0.85rem] border border-[#444] rounded bg-[#2a2a2a] text-inherit cursor-pointer hover:bg-[#3a3a3a] disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={pickingAt !== null}
+                onclick={() => pickWindow(i, j)}
+              >
+                <Crosshair size={14} weight="bold" />
+                {pickingAt && pickingAt.i === i && pickingAt.j === j ? "Click target window…" : "Pick window"}
+              </button>
+            </div>
             {#each FIELDS as key (key)}
               {@const op = getOp(m, key)}
               {@const value = getValue(m, key)}

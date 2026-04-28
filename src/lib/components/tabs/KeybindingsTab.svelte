@@ -69,7 +69,7 @@
   {#each keybindings as kb, i (i)}
     {@const visible = matches(kb)}
     <fieldset
-      class="border rounded-md p-4 flex flex-col gap-[0.85rem] {q && visible ? 'border-[#ffd97a] shadow-[inset_0_0_0_1px_#ffd97a]' : 'border-[#333]'}"
+      class="border rounded-md p-4 flex flex-col gap-[0.85rem] {q && visible ? 'border-[#ffd97a]' : 'border-[#333]'}"
       class:hidden={!visible}
     >
       <legend class="px-2 text-[#ccc]">Keybinding #{i + 1}</legend>
