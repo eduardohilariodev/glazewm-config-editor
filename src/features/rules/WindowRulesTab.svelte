@@ -361,6 +361,13 @@
         <div class="flex flex-col gap-2">
           <span class="text-[0.85rem] text-[#888]">{i18n.t.rules.matchConditions}</span>
           {#each rule.match as m, j (j)}
+            {#if j > 0}
+              <div class="flex items-center gap-2">
+                <span class="flex-1 border-t border-[#2a2a2a]"></span>
+                <span class="text-[0.7rem] uppercase tracking-widest text-[#555]">and</span>
+                <span class="flex-1 border-t border-[#2a2a2a]"></span>
+              </div>
+            {/if}
             <div class="border border-dashed border-[#333] rounded p-[0.6rem] flex flex-col gap-[0.6rem]">
               <div class="flex items-center gap-2">
                 <span class="text-[0.75rem] uppercase tracking-wide text-[#888]">{i18n.t.rules.conditionTitle(j + 1)}</span>
@@ -503,8 +510,7 @@
                   {@const tagDecode = isRegex ? patternToTags(value) : null}
                   <div class="flex flex-wrap items-center gap-x-[0.4rem] gap-y-[0.25rem] text-[0.85rem]">
                     <span class="text-[#777]">{FIELD_READ_LABEL[key]}</span>
-                    <span class="text-primary">{OP_READ_LABEL[op]}</span>
-                    {#if isRegex}<span class="text-primary">for</span>{/if}
+                    <span class="text-primary">{OP_READ_LABEL[op]}{isRegex ? " for" : ""}</span>
                     {#if tagDecode?.ok}
                       <span class="inline-flex flex-wrap gap-[0.3rem]">
                         {#each tagDecode.tags as tag (tag)}
