@@ -23,7 +23,7 @@
       },
       {
         "label": "picker-overlay",
-        "url": "picker",
+        "url": "picker/",
         "transparent": true,
         "decorations": false,
         "alwaysOnTop": true,
