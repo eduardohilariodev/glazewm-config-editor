@@ -1,5 +1,22 @@
 @import "tailwindcss";
 
+@theme {
+  --color-primary: #015f74;
+  --color-primary-hover: #0289a3;
+  --color-primary-fg: #e8f0ff;
+  --color-tag-flash: #2ecc71;
+}
+
+/* Highlight pulse for newly-added tags: fade quickly to green, hold, then
+   fade back to the primary background over 5 seconds total. */
+@keyframes tag-flash {
+  0%   { background-color: var(--color-primary); }
+  8%   { background-color: var(--color-tag-flash); }
+  70%  { background-color: var(--color-tag-flash); }
+  100% { background-color: var(--color-primary); }
+}
+.tag-flash { animation: tag-flash 5s ease-in-out 1; }
+
 /* Project-wide defaults — kept minimal; everything else uses utilities. */
 @layer base {
   html, body {
@@ -8,6 +25,7 @@
     color: #e8e8e8;
     font-family: "Segoe UI", Inter, system-ui, sans-serif;
     overflow: hidden;
+    accent-color: var(--color-primary);
   }
   /* Keep inputs/selects from forcing parents wider than the viewport. */
   input[type="text"],

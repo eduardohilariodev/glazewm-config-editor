@@ -8,6 +8,8 @@
     process: string;
     class_name: string;
     title: string;
+    is_uwp_host: boolean;
+    focus: string;
   };
 
   let x = $state(0);
@@ -15,7 +17,22 @@
   let process = $state("");
   let title = $state("");
   let className = $state("");
+  let isUwpHost = $state(false);
+  let focus = $state("");
   let visible = $state(false);
+
+  type Field = { key: "process" | "class" | "title"; label: string; value: string };
+  const allFields = $derived<Field[]>([
+    { key: "process", label: "process", value: process },
+    { key: "class", label: "class", value: className },
+    { key: "title", label: "title", value: title },
+  ]);
+  const focusedField = $derived(
+    allFields.find((f) => f.key === focus) ?? null,
+  );
+  const otherFields = $derived(
+    focusedField ? allFields.filter((f) => f.key !== focusedField.key) : allFields,
+  );
 
   // Tooltip placement: offset so the cursor tip stays uncovered, and flip to
   // the other side near screen edges so the box never clips off-screen.
@@ -42,6 +59,8 @@
         process = payload.process;
         title = payload.title;
         className = payload.class_name;
+        isUwpHost = payload.is_uwp_host;
+        focus = payload.focus ?? "";
         visible = true;
       });
       unHide = await listen("picker-hide", () => {
@@ -70,20 +89,36 @@
       class="absolute rounded-md border border-[#444] bg-black/85 text-white text-[12px] leading-tight px-3 py-2 shadow-2xl backdrop-blur-sm"
       style="left: {tipLeft}px; top: {tipTop}px; width: {TOOLTIP_W}px;"
     >
-      <div class="flex gap-2">
-        <span class="text-white/40 w-[3.5rem] shrink-0">process</span>
-        <span class="font-mono truncate">{process || "—"}</span>
-      </div>
-      <div class="flex gap-2">
-        <span class="text-white/40 w-[3.5rem] shrink-0">class</span>
-        <span class="font-mono truncate">{className || "—"}</span>
-      </div>
-      <div class="flex gap-2">
-        <span class="text-white/40 w-[3.5rem] shrink-0">title</span>
-        <span class="font-mono truncate">{title || "—"}</span>
+      <div class="flex flex-col gap-1">
+        {#if focusedField}
+          <div class="flex gap-2">
+            <span class="text-white/60 w-[3.5rem] shrink-0">{focusedField.label}</span>
+            <span class="font-mono truncate text-white">{focusedField.value || "—"}</span>
+          </div>
+          <div class="mt-1 pt-1 border-t border-white/10">
+            <div class="text-[10px] uppercase tracking-wide text-white/30 mb-0.5">other</div>
+            {#each otherFields as f (f.key)}
+              <div class="flex gap-2 text-white/50">
+                <span class="text-white/30 w-[3.5rem] shrink-0">{f.label}</span>
+                <span class="font-mono truncate">{f.value || "—"}</span>
+              </div>
+            {/each}
+          </div>
+        {:else}
+          {#each allFields as f (f.key)}
+            <div class="flex gap-2">
+              <span class="text-white/40 w-[3.5rem] shrink-0">{f.label}</span>
+              <span class="font-mono truncate">{f.value || "—"}</span>
+            </div>
+          {/each}
+        {/if}
       </div>
       <div class="mt-1 pt-1 border-t border-white/10 text-[10px] text-white/50">
-        Click to pick · Right-click to cancel
+        {#if isUwpHost}
+          <span class="text-amber-400">UWP app — match by class or title, not process</span>
+        {:else}
+          Click to pick · Right-click to cancel
+        {/if}
       </div>
     </div>
   {/if}

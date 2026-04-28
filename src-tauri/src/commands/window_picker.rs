@@ -24,9 +24,9 @@ mod imp {
     use tauri::{AppHandle, Emitter, Manager, PhysicalPosition, PhysicalSize};
 
     use windows::Win32::Foundation::{CloseHandle, HWND, LPARAM, LRESULT, WPARAM};
-    use windows::Win32::System::ProcessStatus::GetModuleFileNameExW;
     use windows::Win32::System::Threading::{
-        GetCurrentProcessId, OpenProcess, PROCESS_QUERY_INFORMATION, PROCESS_VM_READ,
+        GetCurrentProcessId, OpenProcess, QueryFullProcessImageNameW, PROCESS_NAME_FORMAT,
+        PROCESS_QUERY_LIMITED_INFORMATION,
     };
     use windows::Win32::UI::WindowsAndMessaging::{
         CallNextHookEx, DispatchMessageW, GetClassNameW, GetMessageW, GetSystemMetrics,
@@ -47,6 +47,11 @@ mod imp {
         pub process: String,
         pub class_name: String,
         pub title: String,
+        /// True when the resolved process is `ApplicationFrameHost` — the UWP
+        /// host. The real app's PID lives on a child window, so the value of
+        /// `process` is the host, not the app. The UI should warn the user to
+        /// match by `window_class` (or `window_title`) instead.
+        pub is_uwp_host: bool,
         pub cancelled: bool,
     }
 
@@ -57,11 +62,14 @@ mod imp {
         process: String,
         class_name: String,
         title: String,
+        is_uwp_host: bool,
+        focus: String,
     }
 
     struct PickerState {
         app: AppHandle,
         hook: isize,
+        focus: String,
     }
 
     static STATE: OnceLock<Mutex<Option<PickerState>>> = OnceLock::new();
@@ -77,10 +85,10 @@ mod imp {
         STATE.get_or_init(|| Mutex::new(None))
     }
 
-    fn with_app<F: FnOnce(&AppHandle)>(f: F) {
+    fn with_state<F: FnOnce(&AppHandle, &str)>(f: F) {
         if let Ok(guard) = state().lock() {
             if let Some(s) = guard.as_ref() {
-                f(&s.app);
+                f(&s.app, &s.focus);
             }
         }
     }
@@ -157,6 +165,7 @@ mod imp {
                             process: String::new(),
                             class_name: String::new(),
                             title: String::new(),
+                            is_uwp_host: false,
                             cancelled: false,
                         }
                     } else {
@@ -171,7 +180,7 @@ mod imp {
                             extract_info(hwnd, pid)
                         }
                     };
-                    with_app(|app| {
+                    with_state(|app, focus| {
                         let _ = app.emit_to(
                             OVERLAY_LABEL,
                             "picker-hover",
@@ -181,6 +190,8 @@ mod imp {
                                 process: info.process,
                                 class_name: info.class_name,
                                 title: info.title,
+                                is_uwp_host: info.is_uwp_host,
+                                focus: focus.to_string(),
                             },
                         );
                     });
@@ -214,6 +225,7 @@ mod imp {
             process: String::new(),
             class_name: String::new(),
             title: String::new(),
+            is_uwp_host: false,
             cancelled: true,
         });
         if let Ok(mut guard) = state().lock() {
@@ -244,6 +256,7 @@ mod imp {
             process: String::new(),
             class_name,
             title,
+            is_uwp_host: false,
             cancelled: false,
         }
     }
@@ -257,16 +270,29 @@ mod imp {
         let title_len = unsafe { GetWindowTextW(hwnd, &mut title_buf) };
         let title = String::from_utf16_lossy(&title_buf[..title_len.max(0) as usize]);
 
+        // Use QueryFullProcessImageNameW with PROCESS_QUERY_LIMITED_INFORMATION
+        // — works against elevated processes and Store apps where the older
+        // GetModuleFileNameExW + PROCESS_QUERY_INFORMATION|PROCESS_VM_READ
+        // combo silently fails (returns 0 / empty string).
         let process = unsafe {
-            match OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, false, pid) {
+            match OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid) {
                 Ok(handle) => {
                     let mut buf = [0u16; 1024];
-                    let len = GetModuleFileNameExW(Some(handle), None, &mut buf);
+                    let mut size: u32 = buf.len() as u32;
+                    let ok = QueryFullProcessImageNameW(
+                        handle,
+                        PROCESS_NAME_FORMAT(0),
+                        windows::core::PWSTR(buf.as_mut_ptr()),
+                        &mut size,
+                    );
                     let _ = CloseHandle(handle);
-                    if len > 0 {
-                        let full = String::from_utf16_lossy(&buf[..len as usize]);
+                    if ok.is_ok() && size > 0 {
+                        let full = String::from_utf16_lossy(&buf[..size as usize]);
+                        // GlazeWM's `window_process` matcher expects the bare
+                        // executable name without `.exe` (e.g. "chrome", not
+                        // "chrome.exe" and not the full path).
                         PathBuf::from(&full)
-                            .file_name()
+                            .file_stem()
                             .map(|n| n.to_string_lossy().into_owned())
                             .unwrap_or(full)
                     } else {
@@ -277,15 +303,18 @@ mod imp {
             }
         };
 
+        let is_uwp_host = process.eq_ignore_ascii_case("ApplicationFrameHost");
+
         WindowInfo {
             process,
             class_name,
             title,
+            is_uwp_host,
             cancelled: false,
         }
     }
 
-    pub fn start(app: AppHandle) -> Result<(), String> {
+    pub fn start(app: AppHandle, focus: String) -> Result<(), String> {
         if ACTIVE.swap(true, std::sync::atomic::Ordering::SeqCst) {
             return Err("window picker already active".into());
         }
@@ -311,6 +340,7 @@ mod imp {
                             process: String::new(),
                             class_name: String::new(),
                             title: String::new(),
+                            is_uwp_host: false,
                             cancelled: true,
                         },
                     );
@@ -323,6 +353,7 @@ mod imp {
                 *guard = Some(PickerState {
                     app: app.clone(),
                     hook: hhook.0 as isize,
+                    focus: focus.clone(),
                 });
             }
 
@@ -354,12 +385,15 @@ mod imp {
 
 #[cfg(windows)]
 #[tauri::command]
-pub async fn start_window_pick(app: tauri::AppHandle) -> Result<(), String> {
-    imp::start(app)
+pub async fn start_window_pick(app: tauri::AppHandle, focus: Option<String>) -> Result<(), String> {
+    imp::start(app, focus.unwrap_or_default())
 }
 
 #[cfg(not(windows))]
 #[tauri::command]
-pub async fn start_window_pick(_app: tauri::AppHandle) -> Result<(), String> {
+pub async fn start_window_pick(
+    _app: tauri::AppHandle,
+    _focus: Option<String>,
+) -> Result<(), String> {
     Err("window picker is only supported on Windows".into())
 }

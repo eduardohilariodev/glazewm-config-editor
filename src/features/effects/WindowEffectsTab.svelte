@@ -2,20 +2,13 @@
   import type { WindowEffectsConfig, WindowEffectTarget } from "$shared/types/config";
   import Toggle from "$shared/ui/Toggle.svelte";
   import ColorPicker from "$shared/ui/ColorPicker.svelte";
+  import { i18n } from "$shared/i18n/index.svelte";
 
   interface Props {
     effects: WindowEffectsConfig;
     onPatch: (updater: (e: WindowEffectsConfig) => void) => void;
   }
   let { effects, onPatch }: Props = $props();
-
-  function renderTarget(
-    label: string,
-    target: WindowEffectTarget,
-    select: (e: WindowEffectsConfig) => WindowEffectTarget
-  ) {
-    return { label, target, select };
-  }
 </script>
 
 {#snippet targetSection(label: string, target: WindowEffectTarget, key: "focused_window" | "other_windows")}
@@ -24,28 +17,28 @@
     <div class="grid grid-cols-2 gap-4 items-end">
       <Toggle
         checked={target.border.enabled}
-        label="Border enabled"
+        label={i18n.t.effects.borderEnabled}
         onChange={(v) => onPatch((e) => (e[key].border.enabled = v))}
       />
       <ColorPicker
-        label="Border color"
+        label={i18n.t.effects.borderColor}
         value={target.border.color}
         onChange={(v) => onPatch((e) => (e[key].border.color = v))}
       />
     </div>
     <Toggle
       checked={target.hide_title_bar.enabled}
-      label="Hide title bar"
+      label={i18n.t.effects.hideTitleBar}
       onChange={(v) => onPatch((e) => (e[key].hide_title_bar.enabled = v))}
     />
     <div class="grid grid-cols-2 gap-4 items-end">
       <Toggle
         checked={target.corner_style.enabled}
-        label="Corner style enabled"
+        label={i18n.t.effects.cornerStyleEnabled}
         onChange={(v) => onPatch((e) => (e[key].corner_style.enabled = v))}
       />
       <label class="flex flex-col gap-1">
-        <span class="text-[0.85rem] text-[#888]">Corner style</span>
+        <span class="text-[0.85rem] text-[#888]">{i18n.t.effects.cornerStyle}</span>
         <select
           class="px-[0.6rem] py-[0.4rem] border border-[#444] rounded bg-[#1e1e1e] text-inherit font-[inherit]"
           value={target.corner_style.style}
@@ -65,6 +58,6 @@
 {/snippet}
 
 <section class="flex flex-col gap-4 p-4 min-w-0 max-w-full box-border">
-  {@render targetSection("Focused window", effects.focused_window, "focused_window")}
-  {@render targetSection("Other windows", effects.other_windows, "other_windows")}
+  {@render targetSection(i18n.t.effects.focusedWindow, effects.focused_window, "focused_window")}
+  {@render targetSection(i18n.t.effects.otherWindows, effects.other_windows, "other_windows")}
 </section>

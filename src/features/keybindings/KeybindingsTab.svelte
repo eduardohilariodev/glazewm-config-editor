@@ -5,6 +5,7 @@
   import Stepper from "$shared/ui/Stepper.svelte";
   import { setContext } from "svelte";
   import { Plus, X } from "phosphor-svelte";
+  import { i18n } from "$shared/i18n/index.svelte";
 
   interface Props {
     keybindings: KeybindingConfig[];
@@ -54,7 +55,7 @@
   <div class="sticky top-0 z-10 -mx-4 -mt-4 px-4 py-3 bg-[#181818]/95 backdrop-blur border-b border-[#333] flex items-center gap-2">
     <input
       type="search"
-      placeholder="Filter keybindings (matches binding or command text)…"
+      placeholder={i18n.t.keybindings.filterPlaceholder}
       bind:value={filter}
       class="flex-1 min-w-0 box-border px-[0.6rem] py-[0.4rem] border border-[#444] rounded bg-[#1e1e1e] text-inherit font-[inherit] focus:border-[#0289a3] focus:outline-none placeholder:text-[#666]"
     />
@@ -63,7 +64,7 @@
         type="button"
         class="px-[0.6rem] py-[0.35rem] text-[0.85rem] border border-[#444] rounded bg-[#2a2a2a] text-inherit hover:bg-[#3a3a3a]"
         onclick={() => (filter = "")}
-      >Clear</button>
+      >{i18n.t.keybindings.clear}</button>
     {/if}
   </div>
 
@@ -73,10 +74,10 @@
       class="border rounded-md p-4 flex flex-col gap-[0.85rem] {q && visible ? 'border-[#ffd97a]' : 'border-[#333]'}"
       class:hidden={!visible}
     >
-      <legend class="px-2 text-[#ccc]">Keybinding #{i + 1}</legend>
+      <legend class="px-2 text-[#ccc]">{i18n.t.keybindings.keybindingTitle(i + 1)}</legend>
 
       <div class="flex flex-col gap-[0.4rem]">
-        <span class="text-[0.85rem] text-[#888]">Bindings</span>
+        <span class="text-[0.85rem] text-[#888]">{i18n.t.keybindings.bindings}</span>
         {#each kb.bindings as b, j (j)}
           <KeyCaptureInput
             value={b}
@@ -88,11 +89,11 @@
           type="button"
           class="w-full inline-flex items-center justify-center gap-1.5 px-[0.6rem] py-[0.4rem] text-[0.85rem] border border-dashed border-[#444] rounded bg-[#222] text-[#bbb] cursor-pointer font-[inherit] hover:bg-[#2a2a2a] hover:border-[#666] hover:text-inherit"
           onclick={() => addBinding(i)}
-        ><Plus size={14} weight="bold" />Add binding</button>
+        ><Plus size={14} weight="bold" />{i18n.t.keybindings.addBinding}</button>
       </div>
 
       <div class="flex flex-col gap-[0.4rem]">
-        <span class="text-[0.85rem] text-[#888]">Commands</span>
+        <span class="text-[0.85rem] text-[#888]">{i18n.t.keybindings.commands}</span>
         {#each kb.commands as c, j (j)}
           <Stepper index={j} total={kb.commands.length}>
             <CommandBuilder
@@ -107,19 +108,19 @@
           type="button"
           class="w-full inline-flex items-center justify-center gap-1.5 px-[0.6rem] py-[0.4rem] text-[0.85rem] border border-dashed border-[#444] rounded bg-[#222] text-[#bbb] cursor-pointer font-[inherit] hover:bg-[#2a2a2a] hover:border-[#666] hover:text-inherit"
           onclick={() => addCommand(i)}
-        ><Plus size={14} weight="bold" />Add command</button>
+        ><Plus size={14} weight="bold" />{i18n.t.keybindings.addCommand}</button>
       </div>
 
       <button
         type="button"
         class="self-end inline-flex items-center gap-1.5 px-[0.8rem] py-[0.4rem] border border-[#444] rounded bg-[#2a2a2a] text-[#f88] cursor-pointer font-[inherit] hover:bg-[#3a3a3a]"
         onclick={() => remove(i)}
-      ><X size={14} weight="bold" />Remove keybinding</button>
+      ><X size={14} weight="bold" />{i18n.t.keybindings.removeKeybinding}</button>
     </fieldset>
   {/each}
   <button
     type="button"
     class="self-start inline-flex items-center gap-1.5 px-[0.8rem] py-[0.4rem] border border-[#444] rounded bg-[#2a2a2a] text-inherit cursor-pointer font-[inherit] hover:bg-[#3a3a3a]"
     onclick={add}
-  ><Plus size={14} weight="bold" />Add keybinding</button>
+  ><Plus size={14} weight="bold" />{i18n.t.keybindings.addKeybinding}</button>
 </section>

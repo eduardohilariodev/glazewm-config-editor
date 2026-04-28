@@ -15,6 +15,7 @@
   import { startWindowPick, type PickerFocus } from "$shared/tauri";
   import { escapeLiteral, patternToTags, tagsToPattern } from "$shared/utils/regex";
   import { Crosshair, Plus, X } from "phosphor-svelte";
+  import { i18n } from "$shared/i18n/index.svelte";
 
   interface Props {
     rules: WindowRuleConfig[];
@@ -37,18 +38,28 @@
 
   type FieldKey = "window_process" | "window_class" | "window_title";
   const FIELDS: FieldKey[] = ["window_process", "window_class", "window_title"];
-  const FIELD_LABEL: Record<FieldKey, string> = {
-    window_process: "Process",
-    window_class: "Class",
-    window_title: "Title",
-  };
-  const OP_LABEL: Record<MatchOp, string> = {
-    equals: "equals",
-    includes: "contains",
-    regex: "regex",
-    not_equals: "≠ equals",
-    not_regex: "≠ regex",
-  };
+  const FIELD_LABEL = $derived<Record<FieldKey, string>>({
+    window_process: i18n.t.rules.process,
+    window_class: i18n.t.rules.class,
+    window_title: i18n.t.rules.title,
+  });
+  const OP_LABEL = $derived<Record<MatchOp, string>>({
+    equals: i18n.t.rules.opEquals,
+    includes: i18n.t.rules.opIncludes,
+    regex: i18n.t.rules.opRegex,
+    not_equals: i18n.t.rules.opNotEquals,
+    not_regex: i18n.t.rules.opNotRegex,
+  });
+  const FIELD_PROPERTY_NAME = $derived<Record<FieldKey, string>>({
+    window_process: i18n.t.rules.fieldNameProcess,
+    window_class: i18n.t.rules.fieldNameClass,
+    window_title: i18n.t.rules.fieldNameTitle,
+  });
+  const FIELD_PLACEHOLDER = $derived<Record<FieldKey, string>>({
+    window_process: i18n.t.rules.placeholderProcess,
+    window_class: i18n.t.rules.placeholderClass,
+    window_title: i18n.t.rules.placeholderTitle,
+  });
 
   function getOp(m: WindowMatchConfig | undefined, key: FieldKey): MatchOp {
     const v = m?.[key];
@@ -137,11 +148,6 @@
     window_class: "class",
     window_title: "title",
   };
-  const FIELD_PROPERTY_NAME: Record<FieldKey, string> = {
-    window_process: "process",
-    window_class: "class",
-    window_title: "title",
-  };
 
   function pickedValueFor(
     key: FieldKey,
@@ -223,7 +229,7 @@
   <div class="sticky top-0 z-10 -mx-4 -mt-4 px-4 py-3 bg-[#181818]/95 backdrop-blur border-b border-[#333] flex items-center gap-2">
     <input
       type="search"
-      placeholder="Filter rules (matches process / class / title / command text)…"
+      placeholder={i18n.t.rules.filterPlaceholder}
       bind:value={filter}
       class="flex-1 min-w-0 box-border px-[0.6rem] py-[0.4rem] border border-[#444] rounded bg-[#1e1e1e] text-inherit font-[inherit] focus:border-[#0289a3] focus:outline-none placeholder:text-[#666]"
     />
@@ -232,7 +238,7 @@
         type="button"
         class="px-[0.6rem] py-[0.35rem] text-[0.85rem] border border-[#444] rounded bg-[#2a2a2a] text-inherit hover:bg-[#3a3a3a]"
         onclick={() => (filter = "")}
-      >Clear</button>
+      >{i18n.t.rules.clear}</button>
     {/if}
   </div>
 
@@ -242,9 +248,9 @@
       class="border rounded-md p-4 flex flex-col gap-3 {q && visible ? 'border-[#ffd97a]' : 'border-[#333]'}"
       class:hidden={!visible}
     >
-      <legend class="px-2 text-[#ccc]">Rule #{i + 1}</legend>
+      <legend class="px-2 text-[#ccc]">{i18n.t.rules.ruleTitle(i + 1)}</legend>
       <div class="flex flex-col gap-[0.4rem]">
-        <span class="text-[0.85rem] text-[#888]">Commands</span>
+        <span class="text-[0.85rem] text-[#888]">{i18n.t.rules.commands}</span>
         {#each rule.commands as c, j (j)}
           <Stepper index={j} total={rule.commands.length}>
             <CommandBuilder
@@ -259,14 +265,14 @@
           type="button"
           class="w-full inline-flex items-center justify-center gap-1.5 px-[0.6rem] py-[0.4rem] text-[0.85rem] border border-dashed border-[#444] rounded bg-[#222] text-[#bbb] cursor-pointer hover:bg-[#2a2a2a] hover:border-[#666] hover:text-inherit"
           onclick={() => addCommand(i)}
-        ><Plus size={14} weight="bold" />Add command</button>
+        ><Plus size={14} weight="bold" />{i18n.t.rules.addCommand}</button>
       </div>
 
       <div class="flex flex-col gap-2">
-        <span class="text-[0.85rem] text-[#888]">Match conditions</span>
+        <span class="text-[0.85rem] text-[#888]">{i18n.t.rules.matchConditions}</span>
         {#each rule.match as m, j (j)}
           <div class="border border-dashed border-[#333] rounded p-[0.6rem] flex flex-col gap-[0.6rem]">
-            <span class="text-[0.75rem] uppercase tracking-wide text-[#888]">Condition #{j + 1}</span>
+            <span class="text-[0.75rem] uppercase tracking-wide text-[#888]">{i18n.t.rules.conditionTitle(j + 1)}</span>
             {#each FIELDS as key (key)}
               {@const op = getOp(m, key)}
               {@const value = getValue(m, key)}
@@ -288,21 +294,13 @@
                   {#if op === "regex" || op === "not_regex"}
                     <RegexTagInput
                       {value}
-                      placeholder={key === "window_process"
-                        ? "e.g. firefox.exe"
-                        : key === "window_class"
-                          ? "e.g. Chrome_WidgetWin_1"
-                          : "e.g. Picture in Picture"}
+                      placeholder={FIELD_PLACEHOLDER[key]}
                       onChange={(v) => setField(i, j, key, op, v)}
                     />
                   {:else}
                     <HighlightedInput
                       {value}
-                      placeholder={key === "window_process"
-                        ? "e.g. firefox.exe"
-                        : key === "window_class"
-                          ? "e.g. Chrome_WidgetWin_1"
-                          : "e.g. Picture in Picture"}
+                      placeholder={FIELD_PLACEHOLDER[key]}
                       sharedClass="font-[inherit] text-inherit text-[1rem]"
                       onInput={(v) => setField(i, j, key, op, v)}
                     />
@@ -312,11 +310,11 @@
                   <button
                     type="button"
                     title={isPickingThis
-                      ? "Click any window… right-click to cancel"
+                      ? i18n.t.rules.pickerPicking
                       : isRegex
-                        ? "Pick from a window…"
-                        : `Pick ${FIELD_PROPERTY_NAME[key]} from a window`}
-                    aria-label="Pick window"
+                        ? i18n.t.rules.pickerRegexHint
+                        : i18n.t.rules.pickerSingleHint(FIELD_PROPERTY_NAME[key])}
+                    aria-label={i18n.t.rules.pickerAria}
                     aria-haspopup={isRegex ? "menu" : undefined}
                     aria-expanded={isRegex ? isMenuOpen(i, j, key) : undefined}
                     class="inline-flex items-center justify-center p-[0.35rem] border rounded bg-[#2a2a2a] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed {isPickingThis ? 'border-[#ffd97a] text-[#ffd97a] animate-pulse' : isMenuOpen(i, j, key) ? 'border-[#0289a3] text-inherit' : 'border-[#444] text-inherit hover:bg-[#3a3a3a]'}"
@@ -362,8 +360,8 @@
                 type="button"
                 class="self-end inline-flex items-center justify-center p-[0.35rem] border border-[#444] rounded bg-[#2a2a2a] text-[#f88] cursor-pointer hover:bg-[#3a3a3a] hover:border-[#f88]"
                 onclick={() => removeMatch(i, j)}
-                title="Remove condition group"
-                aria-label="Remove condition group"
+                title={i18n.t.rules.removeCondition}
+                aria-label={i18n.t.rules.removeCondition}
               ><X size={14} weight="bold" /></button>
             {/if}
           </div>
@@ -372,19 +370,19 @@
           type="button"
           class="w-full inline-flex items-center justify-center gap-1.5 px-[0.6rem] py-[0.4rem] text-[0.85rem] border border-dashed border-[#444] rounded bg-[#222] text-[#bbb] cursor-pointer hover:bg-[#2a2a2a] hover:border-[#666] hover:text-inherit"
           onclick={() => addMatch(i)}
-        ><Plus size={14} weight="bold" />Add condition group (OR)</button>
+        ><Plus size={14} weight="bold" />{i18n.t.rules.addCondition}</button>
       </div>
 
       <button
         type="button"
         class="self-start inline-flex items-center gap-1.5 px-[0.8rem] py-[0.4rem] border border-[#444] rounded bg-[#2a2a2a] text-[#f88] cursor-pointer hover:bg-[#3a3a3a]"
         onclick={() => removeRule(i)}
-      ><X size={14} weight="bold" />Remove rule</button>
+      ><X size={14} weight="bold" />{i18n.t.rules.removeRule}</button>
     </fieldset>
   {/each}
   <button
     type="button"
     class="self-start inline-flex items-center gap-1.5 px-[0.8rem] py-[0.4rem] border border-[#444] rounded bg-[#2a2a2a] text-inherit cursor-pointer hover:bg-[#3a3a3a]"
     onclick={addRule}
-  ><Plus size={14} weight="bold" />Add window rule</button>
+  ><Plus size={14} weight="bold" />{i18n.t.rules.addRule}</button>
 </section>

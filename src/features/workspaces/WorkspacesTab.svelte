@@ -11,6 +11,7 @@
     positiveIntegerMask,
   } from "$shared/utils/masks";
   import KbdSequence from "$shared/ui/KbdSequence.svelte";
+  import { i18n } from "$shared/i18n/index.svelte";
   import { Plus, X, CaretUp, CaretDown } from "phosphor-svelte";
 
   interface Props {
@@ -107,10 +108,10 @@
   <table class="w-full border-collapse">
     <thead>
       <tr>
-        <th class="text-left p-2 text-[#aaa] font-medium border-b border-[#333]">Name</th>
-        <th class="text-left p-2 text-[#aaa] font-medium border-b border-[#333]">Display name</th>
-        <th class="text-left p-2 text-[#aaa] font-medium border-b border-[#333]">Bind to monitor</th>
-        <th class="text-left p-2 text-[#aaa] font-medium border-b border-[#333]">Keybinding</th>
+        <th class="text-left p-2 text-[#aaa] font-medium border-b border-[#333]">{i18n.t.workspaces.name}</th>
+        <th class="text-left p-2 text-[#aaa] font-medium border-b border-[#333]">{i18n.t.workspaces.displayName}</th>
+        <th class="text-left p-2 text-[#aaa] font-medium border-b border-[#333]">{i18n.t.workspaces.bindToMonitor}</th>
+        <th class="text-left p-2 text-[#aaa] font-medium border-b border-[#333]">{i18n.t.workspaces.keybinding}</th>
         <th class="text-left p-2 text-[#aaa] font-medium border-b border-[#333]"></th>
       </tr>
     </thead>
@@ -124,8 +125,8 @@
               type="text"
               class="w-full px-[0.6rem] py-[0.4rem] border border-[#444] rounded bg-[#1e1e1e] text-inherit font-[inherit]"
               value={ws.name}
-              placeholder="e.g. 1 or primary"
-              title="Workspace name (no spaces or `|`)"
+              placeholder={i18n.t.workspaces.namePlaceholder}
+              title={i18n.t.workspaces.nameTitle}
               oninput={(e) => {
                 const el = e.currentTarget as HTMLInputElement;
                 const filtered = applyMask(el.value, workspaceNameMask);
@@ -139,7 +140,7 @@
               type="text"
               class="w-full px-[0.6rem] py-[0.4rem] border border-[#444] rounded bg-[#1e1e1e] text-inherit font-[inherit]"
               value={ws.display_name}
-              placeholder="e.g. 1 · Web"
+              placeholder={i18n.t.workspaces.displayNamePlaceholder}
               oninput={(e) =>
                 updateField(i, "display_name", (e.currentTarget as HTMLInputElement).value)}
             />
@@ -150,8 +151,8 @@
               inputmode="numeric"
               class="w-full px-[0.6rem] py-[0.4rem] border border-[#444] rounded bg-[#1e1e1e] text-inherit font-[inherit]"
               value={ws.bind_to_monitor ?? ""}
-              placeholder="e.g. 0 (any)"
-              title="Monitor index (whole number)"
+              placeholder={i18n.t.workspaces.bindToMonitorPlaceholder}
+              title={i18n.t.workspaces.bindToMonitorTitle}
               oninput={(e) => {
                 const el = e.currentTarget as HTMLInputElement;
                 const filtered = applyMask(el.value, positiveIntegerMask);
@@ -168,7 +169,7 @@
               onclick={() => toggleExpand(i)}
             >
               {#if bindings.length === 0}
-                <span class="inline-flex items-center gap-1.5"><Plus size={14} weight="bold" />Add key binding</span>
+                <span class="inline-flex items-center gap-1.5"><Plus size={14} weight="bold" />{i18n.t.workspaces.addKeybinding}</span>
               {:else}
                 <span class="flex flex-wrap items-center gap-1">
                   {#each bindings as b, bi (bi)}
@@ -187,7 +188,7 @@
               type="button"
               class="inline-flex items-center justify-center px-[0.5rem] py-[0.4rem] border border-[#444] rounded bg-[#2a2a2a] text-inherit cursor-pointer hover:bg-[#3a3a3a]"
               onclick={() => removeWorkspace(i)}
-              aria-label="Remove"
+              aria-label={i18n.t.workspaces.removeAria}
             ><X size={14} weight="bold" /></button>
           </td>
         </tr>
@@ -196,7 +197,7 @@
             <td colspan="5" class="bg-[#1a1a1a] p-0">
               <div class="px-4 py-3 border-l-[3px] border-[#8eb8ed] flex flex-col gap-2">
                 <span class="text-[#aaa] text-[0.85rem]">
-                  Command: <code class="text-[#ddd]">focus --workspace {ws.name}</code>
+                  {i18n.t.workspaces.commandLabel} <code class="text-[#ddd]">focus --workspace {ws.name}</code>
                 </span>
                 <div class="flex flex-wrap gap-[0.4rem] items-center">
                   {#each bindings as b (b)}
@@ -205,7 +206,7 @@
                       <button
                         type="button"
                         class="inline-flex items-center justify-center p-0 bg-transparent border-0 text-inherit leading-none cursor-pointer hover:text-white"
-                        aria-label="Remove binding"
+                        aria-label={i18n.t.workspaces.removeBindingAria}
                         onclick={() => removeBinding(ws.name, b)}
                       ><X size={11} weight="bold" /></button>
                     </span>
@@ -213,7 +214,7 @@
                   <input
                     type="text"
                     class="w-auto min-w-[8rem] flex-none px-[0.6rem] py-[0.4rem] border border-[#444] rounded bg-[#1e1e1e] text-inherit font-mono"
-                    placeholder="e.g. alt+1"
+                    placeholder={i18n.t.workspaces.bindingPlaceholder}
                     value={drafts[i] ?? ""}
                     oninput={(e) => (drafts[i] = (e.currentTarget as HTMLInputElement).value)}
                     onkeydown={(e) => e.key === "Enter" && addBinding(i, ws.name)}
@@ -222,7 +223,7 @@
                     type="button"
                     class="inline-flex items-center gap-1.5 px-[0.8rem] py-[0.4rem] border border-[#444] rounded bg-[#2a2a2a] text-inherit cursor-pointer hover:bg-[#3a3a3a]"
                     onclick={() => addBinding(i, ws.name)}
-                  ><Plus size={14} weight="bold" />Add</button>
+                  ><Plus size={14} weight="bold" />{i18n.t.workspaces.add}</button>
                 </div>
                 <p class="m-0 text-[#777] text-[0.8rem]">
                   Synced with the Keybindings tab. Compound bindings (e.g. <code class="text-[#aaa]"
@@ -240,5 +241,5 @@
     type="button"
     class="self-start inline-flex items-center gap-1.5 px-[0.8rem] py-[0.4rem] border border-[#444] rounded bg-[#2a2a2a] text-inherit cursor-pointer hover:bg-[#3a3a3a]"
     onclick={addWorkspace}
-  ><Plus size={14} weight="bold" />Add workspace</button>
+  ><Plus size={14} weight="bold" />{i18n.t.workspaces.addWorkspace}</button>
 </section>

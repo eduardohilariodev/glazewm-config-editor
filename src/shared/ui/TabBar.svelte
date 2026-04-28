@@ -15,7 +15,7 @@
   let { tabs, active, onSelect }: Props = $props();
 </script>
 
-<nav class="flex gap-1 border-b border-[#333] px-2">
+<nav class="flex justify-center gap-1 border-b border-[#333] px-2">
   {#each tabs as tab (tab.id)}
     {@const Icon = tab.icon}
     <button

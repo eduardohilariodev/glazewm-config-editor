@@ -7,7 +7,7 @@ A desktop GUI for editing [GlazeWM](https://github.com/glzr-io/glazewm) YAML con
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Scoop bucket](https://img.shields.io/badge/scoop-bucket-orange)](https://github.com/eduardohilariodev/scoop-bucket)
 
-![Screenshot](docs/screenshot.png)
+![Screenshot](public/icon.png)
 
 ## Features
 
