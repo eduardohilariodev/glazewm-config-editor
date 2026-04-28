@@ -503,7 +503,10 @@
               <span class="text-[#555] text-[0.85rem] italic pl-1">{i18n.t.rules.anyWindow}</span>
             {:else}
               <div class="flex flex-col gap-y-[0.3rem] pl-1">
-                {#each setFields as key (key)}
+                {#each setFields as key, ki (key)}
+                  {#if ki > 0}
+                    <span class="text-[0.7rem] uppercase tracking-widest text-[#555] pl-0">and</span>
+                  {/if}
                   {@const op = getOp(m, key)}
                   {@const value = getValue(m, key)}
                   {@const isRegex = op === "regex" || op === "not_regex"}
