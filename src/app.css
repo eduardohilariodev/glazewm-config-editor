@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+/* Project-wide defaults — kept minimal; everything else uses utilities. */
+@layer base {
+  html, body {
+    margin: 0;
+    background: #181818;
+    color: #e8e8e8;
+    font-family: "Segoe UI", Inter, system-ui, sans-serif;
+    overflow: hidden;
+  }
+  /* Keep inputs/selects from forcing parents wider than the viewport. */
+  input[type="text"],
+  input[type="number"],
+  input[type="search"],
+  textarea,
+  select {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+}
