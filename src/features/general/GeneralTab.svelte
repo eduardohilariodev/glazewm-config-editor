@@ -11,38 +11,93 @@
     onPatch: (updater: (g: GeneralConfig) => void) => void;
   }
   let { general, onPatch }: Props = $props();
+
+  let startupEnabled = $state(general.startup_commands.length > 0);
+  let shutdownEnabled = $state(general.shutdown_commands.length > 0);
+  let reloadEnabled = $state(general.config_reload_commands.length > 0);
+
+  // Drafts preserve commands while the section is toggled off.
+  let startupDraft = $state<string[]>([]);
+  let shutdownDraft = $state<string[]>([]);
+  let reloadDraft = $state<string[]>([]);
+
+  function toggleSection(
+    enabled: boolean,
+    draft: string[],
+    current: string[],
+    onDraft: (d: string[]) => void,
+    patch: (items: string[]) => void,
+  ) {
+    if (!enabled) {
+      onDraft([...current]);
+      patch([]);
+    } else {
+      patch(draft.length ? draft : [""]);
+      onDraft([]);
+    }
+  }
 </script>
 
 <section class="tab flex flex-col gap-4 p-4 min-w-0 max-w-full box-border">
-  <h2 class="mt-2 mb-0 text-base text-[#ccc] inline-flex items-center gap-1.5">
-    {i18n.t.general.startupCommands}
-    <InfoIcon text="Commands run when GlazeWM starts. Useful for launching companion apps like Zebar." />
-  </h2>
-  <CommandListEditor
-    items={general.startup_commands}
-    placeholder={i18n.t.general.placeholderStartup}
-    onChange={(items) => onPatch((g) => (g.startup_commands = items))}
-  />
+  <div class="mt-2 mb-0 flex items-center justify-between gap-2">
+    <h2 class="text-base text-[#ccc] m-0 inline-flex items-center gap-1.5">
+      {i18n.t.general.startupCommands}
+      <InfoIcon text="Commands run when GlazeWM starts. Useful for launching companion apps like Zebar." />
+    </h2>
+    <Toggle
+      checked={startupEnabled}
+      onChange={(v) => {
+        startupEnabled = v;
+        toggleSection(v, startupDraft, general.startup_commands, (d) => (startupDraft = d), (items) => onPatch((g) => (g.startup_commands = items)));
+      }}
+    />
+  </div>
+  <fieldset disabled={!startupEnabled} class="border-0 p-0 m-0 {!startupEnabled ? 'opacity-40' : ''}">
+    <CommandListEditor
+      items={general.startup_commands}
+      onChange={(items) => onPatch((g) => (g.startup_commands = items))}
+    />
+  </fieldset>
 
-  <h2 class="mt-2 mb-0 text-base text-[#ccc] inline-flex items-center gap-1.5">
-    {i18n.t.general.shutdownCommands}
-    <InfoIcon text="Commands run just before GlazeWM shuts down. Use to clean up startup apps." />
-  </h2>
-  <CommandListEditor
-    items={general.shutdown_commands}
-    placeholder={i18n.t.general.placeholderShutdown}
-    onChange={(items) => onPatch((g) => (g.shutdown_commands = items))}
-  />
+  <div class="mt-2 mb-0 flex items-center justify-between gap-2">
+    <h2 class="text-base text-[#ccc] m-0 inline-flex items-center gap-1.5">
+      {i18n.t.general.shutdownCommands}
+      <InfoIcon text="Commands run just before GlazeWM shuts down. Use to clean up startup apps." />
+    </h2>
+    <Toggle
+      checked={shutdownEnabled}
+      onChange={(v) => {
+        shutdownEnabled = v;
+        toggleSection(v, shutdownDraft, general.shutdown_commands, (d) => (shutdownDraft = d), (items) => onPatch((g) => (g.shutdown_commands = items)));
+      }}
+    />
+  </div>
+  <fieldset disabled={!shutdownEnabled} class="border-0 p-0 m-0 {!shutdownEnabled ? 'opacity-40' : ''}">
+    <CommandListEditor
+      items={general.shutdown_commands}
+      onChange={(items) => onPatch((g) => (g.shutdown_commands = items))}
+    />
+  </fieldset>
 
-  <h2 class="mt-2 mb-0 text-base text-[#ccc] inline-flex items-center gap-1.5">
-    {i18n.t.general.configReloadCommands}
-    <InfoIcon text="Commands run after the config file is reloaded (e.g. via wm-reload-config)." />
-  </h2>
-  <CommandListEditor
-    items={general.config_reload_commands}
-    placeholder={i18n.t.general.placeholderReload}
-    onChange={(items) => onPatch((g) => (g.config_reload_commands = items))}
-  />
+  <div class="mt-2 mb-0 flex items-center justify-between gap-2">
+    <h2 class="text-base text-[#ccc] m-0 inline-flex items-center gap-1.5">
+      {i18n.t.general.configReloadCommands}
+      <InfoIcon text="Commands run after the config file is reloaded (e.g. via wm-reload-config)." />
+    </h2>
+    <Toggle
+      checked={reloadEnabled}
+      onChange={(v) => {
+        reloadEnabled = v;
+        toggleSection(v, reloadDraft, general.config_reload_commands, (d) => (reloadDraft = d), (items) => onPatch((g) => (g.config_reload_commands = items)));
+      }}
+    />
+  </div>
+  <fieldset disabled={!reloadEnabled} class="border-0 p-0 m-0 {!reloadEnabled ? 'opacity-40' : ''}">
+    <CommandListEditor
+      items={general.config_reload_commands}
+      onChange={(items) => onPatch((g) => (g.config_reload_commands = items))}
+    />
+  </fieldset>
 
   <h2 class="mt-2 mb-0 text-base text-[#ccc] inline-flex items-center gap-1.5">
     {i18n.t.general.behavior}
