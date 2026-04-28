@@ -1,9 +1,8 @@
 <script lang="ts">
   import type { GapsConfig } from "$shared/types/config";
   import Toggle from "$shared/ui/Toggle.svelte";
-  import MaskedInput from "$shared/ui/MaskedInput.svelte";
+  import GapInput from "$shared/ui/GapInput.svelte";
   import InfoIcon from "$shared/ui/InfoIcon.svelte";
-  import { positiveLengthMask } from "$shared/utils/masks";
   import { i18n } from "$shared/i18n/index.svelte";
 
   interface Props {
@@ -33,10 +32,9 @@
     <!-- Top outer gap -->
     <div class="flex justify-center pb-2">
       <div class="w-[120px]">
-        <MaskedInput
+        <GapInput
           label={i18n.t.gaps.top}
           value={gaps.outer_gap.top}
-          mask={positiveLengthMask}
           title={i18n.t.gaps.outerTopTitle}
           onChange={(v) => onPatch((g) => (g.outer_gap.top = v))}
         />
@@ -46,10 +44,9 @@
     <!-- Middle row: left · screen · right -->
     <div class="flex items-center gap-3">
       <div class="w-[120px] flex-shrink-0">
-        <MaskedInput
+        <GapInput
           label={i18n.t.gaps.left}
           value={gaps.outer_gap.left}
-          mask={positiveLengthMask}
           title={i18n.t.gaps.outerLeftTitle}
           onChange={(v) => onPatch((g) => (g.outer_gap.left = v))}
         />
@@ -69,10 +66,9 @@
         </div>
         <!-- Inner gap input centered over the gap between the two tiles -->
         <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[120px] z-10">
-          <MaskedInput
+          <GapInput
             label={i18n.t.gaps.inner}
             value={gaps.inner_gap}
-            mask={positiveLengthMask}
             title={i18n.t.gaps.innerTitle}
             onChange={(v) => onPatch((g) => (g.inner_gap = v))}
           />
@@ -80,10 +76,9 @@
       </div>
 
       <div class="w-[120px] flex-shrink-0">
-        <MaskedInput
+        <GapInput
           label={i18n.t.gaps.right}
           value={gaps.outer_gap.right}
-          mask={positiveLengthMask}
           title={i18n.t.gaps.outerRightTitle}
           onChange={(v) => onPatch((g) => (g.outer_gap.right = v))}
         />
@@ -93,10 +88,9 @@
     <!-- Bottom outer gap -->
     <div class="flex justify-center pt-2">
       <div class="w-[120px]">
-        <MaskedInput
+        <GapInput
           label={i18n.t.gaps.bottom}
           value={gaps.outer_gap.bottom}
-          mask={positiveLengthMask}
           title={i18n.t.gaps.outerBottomTitle}
           onChange={(v) => onPatch((g) => (g.outer_gap.bottom = v))}
         />
