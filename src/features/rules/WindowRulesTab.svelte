@@ -15,7 +15,7 @@
   import { setContext } from "svelte";
   import { startWindowPick, type PickerFocus } from "$shared/tauri";
   import { escapeLiteral, patternToTags, tagsToPattern } from "$shared/utils/regex";
-  import { semanticLabel } from "$shared/utils/commands";
+  import { semanticLabel, describeCommand } from "$shared/utils/commands";
   import { Crosshair, Plus, X, MagnifyingGlass, PencilSimple, Check } from "phosphor-svelte";
   import { i18n } from "$shared/i18n/index.svelte";
 
@@ -32,13 +32,9 @@
   function matches(rule: WindowRuleConfig): boolean {
     if (!q) return true;
     const parts: string[] = [...rule.commands];
-    // Include semantic labels so "Set Floating" matches "set-floating".
+    // Include natural-language descriptions so "floating" matches "set-floating".
     for (const cmd of rule.commands) {
-      const label = semanticLabel(cmd);
-      if (label.ok) {
-        parts.push(label.primary);
-        if (label.secondary) parts.push(label.secondary);
-      }
+      parts.push(describeCommand(cmd));
     }
     for (const m of rule.match) {
       for (const k of FIELDS) parts.push(getValue(m, k));
@@ -69,6 +65,20 @@
     window_process: i18n.t.rules.placeholderProcess,
     window_class: i18n.t.rules.placeholderClass,
     window_title: i18n.t.rules.placeholderTitle,
+  });
+
+  // Read-mode labels — longer, more descriptive than edit-mode column headers.
+  const FIELD_READ_LABEL = $derived<Record<FieldKey, string>>({
+    window_process: i18n.t.rules.fieldReadProcess,
+    window_class: i18n.t.rules.fieldReadClass,
+    window_title: i18n.t.rules.fieldReadTitle,
+  });
+  const OP_READ_LABEL = $derived<Record<MatchOp, string>>({
+    equals: i18n.t.rules.opEquals,
+    includes: i18n.t.rules.opIncludes,
+    regex: i18n.t.rules.opReadRegex,
+    not_equals: i18n.t.rules.opReadNotEquals,
+    not_regex: i18n.t.rules.opReadNotRegex,
   });
 
   function getOp(m: WindowMatchConfig | undefined, key: FieldKey): MatchOp {
@@ -458,31 +468,21 @@
 
       {:else}
         <!-- ── Read mode ───────────────────────────────────────────────────── -->
-        <div class="flex flex-col gap-[0.35rem]">
-          <span class="text-[0.75rem] uppercase tracking-wide text-[#666]">{i18n.t.rules.commands}</span>
+        <div class="flex flex-col gap-[0.25rem]">
+          <span class="text-[0.7rem] uppercase tracking-wide text-[#555]">{i18n.t.rules.readCommandsHeader}</span>
           {#if rule.commands.length === 0}
-            <span class="text-[#555] text-[0.85rem] italic">(none)</span>
+            <span class="text-[#555] text-[0.85rem] italic pl-1">(none)</span>
           {:else}
-            <div class="flex flex-wrap gap-1.5">
+            <ul class="m-0 p-0 list-none flex flex-col gap-[0.2rem]">
               {#each rule.commands as cmd (cmd)}
-                {@const label = semanticLabel(cmd)}
-                {#if label.ok}
-                  <span class="inline-flex items-center gap-0 rounded overflow-hidden border border-[#335] text-[0.8rem]">
-                    <span class="bg-[#1a2535] text-[#7ab3e0] px-[0.55rem] py-[0.2rem] font-medium">{label.primary}</span>
-                    {#if label.secondary}
-                      <span class="bg-[#12161d] text-[#ccc] px-[0.5rem] py-[0.2rem] border-l border-[#335]">{label.secondary}</span>
-                    {/if}
-                  </span>
-                {:else}
-                  <code class="rounded border border-[#444] bg-[#1e1e1e] text-[#d8a657] px-[0.55rem] py-[0.2rem] text-[0.8rem] font-mono">{label.primary}</code>
-                {/if}
+                <li class="text-[0.85rem] text-[#ccc] pl-1 before:content-['→'] before:text-[#555] before:mr-2">{describeCommand(cmd)}</li>
               {/each}
-            </div>
+            </ul>
           {/if}
         </div>
 
-        <div class="flex flex-col gap-[0.35rem]">
-          <span class="text-[0.75rem] uppercase tracking-wide text-[#666]">{i18n.t.rules.matchConditions}</span>
+        <div class="flex flex-col gap-[0.3rem]">
+          <span class="text-[0.7rem] uppercase tracking-wide text-[#555]">{i18n.t.rules.readConditionsHeader}</span>
           {#each rule.match as m, j (j)}
             {#if j > 0}
               <div class="flex items-center gap-2 my-[0.1rem]">
@@ -493,15 +493,27 @@
             {/if}
             {@const setFields = FIELDS.filter((k) => getValue(m, k))}
             {#if setFields.length === 0}
-              <span class="text-[#555] text-[0.85rem] italic">{i18n.t.rules.anyWindow}</span>
+              <span class="text-[#555] text-[0.85rem] italic pl-1">{i18n.t.rules.anyWindow}</span>
             {:else}
-              <div class="flex flex-wrap gap-x-4 gap-y-[0.25rem]">
+              <div class="flex flex-col gap-y-[0.3rem] pl-1">
                 {#each setFields as key (key)}
-                  <span class="text-[0.85rem]">
-                    <span class="text-[#777]">{FIELD_LABEL[key]}</span>
-                    <span class="text-[#555] mx-1">{OP_LABEL[getOp(m, key)]}</span>
-                    <span class="text-[#ddd] font-mono text-[0.8rem]">{getValue(m, key)}</span>
-                  </span>
+                  {@const op = getOp(m, key)}
+                  {@const value = getValue(m, key)}
+                  {@const isRegex = op === "regex" || op === "not_regex"}
+                  {@const tagDecode = isRegex ? patternToTags(value) : null}
+                  <div class="flex flex-wrap items-center gap-x-[0.4rem] gap-y-[0.25rem] text-[0.85rem]">
+                    <span class="text-[#777]">{FIELD_READ_LABEL[key]}</span>
+                    <span class="text-[#555]">{OP_READ_LABEL[op]}</span>
+                    {#if tagDecode?.ok}
+                      <span class="inline-flex flex-wrap gap-[0.3rem]">
+                        {#each tagDecode.tags as tag (tag)}
+                          <span class="inline-flex items-center px-[0.35rem] py-[0.1rem] rounded-[3px] bg-[#015f74] text-[#e8f0ff] font-mono text-[0.8rem]">{tag}</span>
+                        {/each}
+                      </span>
+                    {:else}
+                      <span class="text-[#ddd] font-mono text-[0.8rem]">{value}</span>
+                    {/if}
+                  </div>
                 {/each}
               </div>
             {/if}
