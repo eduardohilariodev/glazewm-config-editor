@@ -33,7 +33,9 @@
       "icons/32x32.png",
       "icons/128x128.png",
       "icons/128x128@2x.png",
-      "icons/icon.ico"
+      "icons/icon.ico",
+      "icons/icon.icns",
+      "icons/icon.png"
     ]
   },
   "plugins": {
@@ -41,7 +43,7 @@
       "endpoints": [
         "https://github.com/eduardohilariodev/glazewm-config-editor/releases/latest/download/latest.json"
       ],
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEJGOEUzNDcwNjI0QTFCNkIKUldSckcwcGljRFNPdjBwSXk3WXF6c09pQVBtTElwczBKdkhSbGphb0FML0tlN09aMVNSeXVTUVIK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEE2OEMzMjQyN0JERDBCOUYKUldTZkM5MTdRaktNcHFDbVdsZ2tjck9LZjZPMXFPWFZTNVZ1S3QyZnhvZHJrenlNa2ExRkpXMlAK",
       "windows": {
         "installMode": "passive"
       }
