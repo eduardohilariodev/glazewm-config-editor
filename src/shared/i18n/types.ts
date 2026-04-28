@@ -146,6 +146,9 @@ export interface Dictionary {
     addCondition: string;
     removeRule: string;
     addRule: string;
+    edit: string;
+    done: string;
+    anyWindow: string;
   };
   settings: {
     editorBehavior: string;

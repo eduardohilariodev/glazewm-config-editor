@@ -142,6 +142,9 @@ const es: Dictionary = {
     addCondition: "Añadir grupo de condiciones (O)",
     removeRule: "Quitar regla",
     addRule: "Añadir regla de ventana",
+    edit: "Editar",
+    done: "Listo",
+    anyWindow: "Cualquier ventana",
   },
   settings: {
     editorBehavior: "Comportamiento del editor",

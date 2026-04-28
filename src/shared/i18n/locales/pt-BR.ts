@@ -141,6 +141,9 @@ const ptBR: Dictionary = {
     addCondition: "Adicionar grupo de condição (OU)",
     removeRule: "Remover regra",
     addRule: "Adicionar regra de janela",
+    edit: "Editar",
+    done: "Concluído",
+    anyWindow: "Qualquer janela",
   },
   settings: {
     editorBehavior: "Comportamento do editor",

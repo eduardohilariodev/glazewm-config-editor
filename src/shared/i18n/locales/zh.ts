@@ -137,6 +137,9 @@ const zh: Dictionary = {
     addCondition: "添加条件组（或）",
     removeRule: "移除规则",
     addRule: "添加窗口规则",
+    edit: "编辑",
+    done: "完成",
+    anyWindow: "任意窗口",
   },
   settings: {
     editorBehavior: "编辑器行为",

@@ -141,6 +141,9 @@ const en: Dictionary = {
     addCondition: "Add condition group (OR)",
     removeRule: "Remove rule",
     addRule: "Add window rule",
+    edit: "Edit",
+    done: "Done",
+    anyWindow: "Any window",
   },
   settings: {
     editorBehavior: "Editor behavior",
