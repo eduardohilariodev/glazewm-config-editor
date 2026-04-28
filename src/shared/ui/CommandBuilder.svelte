@@ -1,8 +1,12 @@
 <script lang="ts">
   import {
     VERBS,
+    VERB_MAP,
+    VERB_CATEGORIES,
     DIRECTIONS,
+    DIRECTION_LABELS,
     TILING_DIRS,
+    TILING_DIR_LABELS,
     parseCommand,
     buildCommand,
     type CommandOption,
@@ -15,11 +19,11 @@
 
   interface Props {
     value: string;
-    workspaces: WorkspaceConfig[];
+    workspaces?: WorkspaceConfig[];
     onChange: (next: string) => void;
     onRemove?: () => void;
   }
-  let { value, workspaces, onChange, onRemove }: Props = $props();
+  let { value, workspaces = [], onChange, onRemove }: Props = $props();
 
   // Parse the incoming command. If parse fails, raw mode is forced.
   let parsed = $derived(parseCommand(value));
@@ -35,10 +39,24 @@
   let verb = $derived(VERBS[parsed.verbIdx]);
   let option = $derived<CommandOption | undefined>(verb?.options[parsed.optionIdx]);
 
+  // Cascading verb picker state.
+  let categoryIdx = $derived(
+    VERB_CATEGORIES.findIndex((cat) => cat.verbs.includes(VERBS[parsed.verbIdx]?.name ?? ""))
+  );
+  let safeCategoryIdx = $derived(categoryIdx < 0 ? 0 : categoryIdx);
+  let category = $derived(VERB_CATEGORIES[safeCategoryIdx]);
+  let verbsInCategory = $derived(category?.verbs ?? []);
+  let needsLevel2 = $derived(verbsInCategory.length > 1);
+
   function setVerb(name: string) {
     const verbIdx = VERBS.findIndex((v) => v.name === name);
     if (verbIdx < 0) return;
     onChange(buildCommand(verbIdx, 0, ""));
+  }
+  function setCategory(idx: number) {
+    const cat = VERB_CATEGORIES[idx];
+    if (!cat?.verbs.length) return;
+    setVerb(cat.verbs[0]);
   }
   function setOption(idx: number) {
     onChange(buildCommand(parsed.verbIdx, idx, ""));
@@ -78,28 +96,50 @@
     {#if onRemove}
       <button
         type="button"
-        class="ml-auto inline-flex items-center justify-center border border-[#444] bg-[#2a2a2a] text-[#f88] px-[0.4rem] py-[0.25rem] rounded cursor-pointer hover:bg-[#3a3a3a]"
+        class="ml-auto inline-flex items-center gap-1 border border-[#444] bg-[#2a2a2a] text-[#888] px-[0.4rem] py-[0.25rem] text-[0.75rem] rounded cursor-pointer hover:bg-[#3a3a3a] hover:text-[#f88] hover:border-[#f88]"
         onclick={onRemove}
         aria-label="Remove"
-      ><X size={12} weight="bold" /></button>
+      ><X size={11} weight="bold" />Remove command</button>
     {/if}
   </div>
 
   {#if mode === "build" && verb && option}
-    <div class="grid grid-cols-[minmax(0,1.2fr)_minmax(0,1.4fr)_minmax(0,1.4fr)] gap-[0.4rem]">
+    <div class="flex gap-[0.4rem]">
+      <!-- Level 1: Category -->
       <select
-        class="w-full box-border px-[0.6rem] py-[0.4rem] border border-[#444] rounded bg-[#1e1e1e] text-inherit font-mono text-[0.9rem]"
-        value={verb.name}
-        onchange={(e) => setVerb((e.currentTarget as HTMLSelectElement).value)}
+        class="flex-1 min-w-0 box-border px-[0.6rem] py-[0.4rem] border border-[#444] rounded bg-[#1e1e1e] text-inherit font-mono text-[0.9rem]"
+        value={String(safeCategoryIdx)}
+        onchange={(e) => setCategory(Number((e.currentTarget as HTMLSelectElement).value))}
       >
-        {#each VERBS as v (v.name)}
-          <option value={v.name}>{settings.advancedMode ? v.name : (v.label ?? v.name)}</option>
+        {#each VERB_CATEGORIES as cat, i (i)}
+          <option value={String(i)}>
+            {settings.advancedMode ? (cat.advancedLabel ?? cat.label) : cat.label}
+          </option>
         {/each}
       </select>
 
-      {#if verb.options.length > 1 || verb.options[0].value !== "none"}
+      <!-- Level 2: Verb within category (only when category has >1 verb) -->
+      {#if needsLevel2}
         <select
-          class="w-full box-border px-[0.6rem] py-[0.4rem] border border-[#444] rounded bg-[#1e1e1e] text-inherit font-mono text-[0.9rem]"
+          class="flex-1 min-w-0 box-border px-[0.6rem] py-[0.4rem] border border-[#444] rounded bg-[#1e1e1e] text-inherit font-mono text-[0.9rem]"
+          value={verb.name}
+          onchange={(e) => setVerb((e.currentTarget as HTMLSelectElement).value)}
+        >
+          {#each verbsInCategory as vName (vName)}
+            {@const v = VERB_MAP.get(vName)}
+            {#if v}
+              <option value={v.name}>
+                {settings.advancedMode ? v.name : (v.subjectLabel ?? v.label ?? v.name)}
+              </option>
+            {/if}
+          {/each}
+        </select>
+      {/if}
+
+      <!-- Level 3: Option (enabled when >1 option, disabled placeholder when single no-arg option) -->
+      {#if verb.options.length > 1}
+        <select
+          class="flex-1 min-w-0 box-border px-[0.6rem] py-[0.4rem] border border-[#444] rounded bg-[#1e1e1e] text-inherit font-mono text-[0.9rem]"
           value={String(parsed.optionIdx)}
           onchange={(e) => setOption(Number((e.currentTarget as HTMLSelectElement).value))}
         >
@@ -107,13 +147,19 @@
             <option value={String(i)}>{settings.advancedMode ? o.label : (o.friendlyLabel ?? o.label)}</option>
           {/each}
         </select>
-      {:else}
-        <div class="flex items-center justify-center text-[#555] font-mono border border-dashed border-[#333] rounded">—</div>
+      {:else if verb.options[0].value === "none"}
+        <select
+          disabled
+          class="flex-1 min-w-0 box-border px-[0.6rem] py-[0.4rem] border border-[#444] rounded bg-[#1e1e1e] text-inherit font-mono text-[0.9rem] opacity-30 cursor-not-allowed"
+        >
+          <option>—</option>
+        </select>
       {/if}
 
+      <!-- Level 4: Value -->
       {#if option.value === "workspace"}
         <select
-          class="w-full box-border px-[0.6rem] py-[0.4rem] border border-[#444] rounded bg-[#1e1e1e] text-inherit font-mono text-[0.9rem]"
+          class="flex-1 min-w-0 box-border px-[0.6rem] py-[0.4rem] border border-[#444] rounded bg-[#1e1e1e] text-inherit font-mono text-[0.9rem]"
           value={parsed.value}
           onchange={(e) => setValue((e.currentTarget as HTMLSelectElement).value)}
         >
@@ -128,7 +174,7 @@
         </select>
       {:else if option.value === "direction"}
         <select
-          class="w-full box-border px-[0.6rem] py-[0.4rem] border border-[#444] rounded bg-[#1e1e1e] text-inherit font-mono text-[0.9rem]"
+          class="flex-1 min-w-0 box-border px-[0.6rem] py-[0.4rem] border border-[#444] rounded bg-[#1e1e1e] text-inherit font-mono text-[0.9rem]"
           value={parsed.value}
           onchange={(e) => setValue((e.currentTarget as HTMLSelectElement).value)}
         >
@@ -136,12 +182,12 @@
             <option value={parsed.value}>{parsed.value || "(pick…)"}</option>
           {/if}
           {#each DIRECTIONS as d (d)}
-            <option value={d}>{d}</option>
+            <option value={d}>{settings.advancedMode ? d : (DIRECTION_LABELS[d] ?? d)}</option>
           {/each}
         </select>
       {:else if option.value === "tilingDir"}
         <select
-          class="w-full box-border px-[0.6rem] py-[0.4rem] border border-[#444] rounded bg-[#1e1e1e] text-inherit font-mono text-[0.9rem]"
+          class="flex-1 min-w-0 box-border px-[0.6rem] py-[0.4rem] border border-[#444] rounded bg-[#1e1e1e] text-inherit font-mono text-[0.9rem]"
           value={parsed.value}
           onchange={(e) => setValue((e.currentTarget as HTMLSelectElement).value)}
         >
@@ -149,34 +195,38 @@
             <option value={parsed.value}>{parsed.value || "(pick…)"}</option>
           {/if}
           {#each TILING_DIRS as d (d)}
-            <option value={d}>{d}</option>
+            <option value={d}>{settings.advancedMode ? d : (TILING_DIR_LABELS[d] ?? d)}</option>
           {/each}
         </select>
       {:else if option.value === "amount"}
-        <HighlightedInput
-          sharedClass="font-mono text-[0.9rem]"
-          value={parsed.value}
-          placeholder="e.g. 10% or 100px"
-          title="Length: integer or float, optional unit `px` or `%`. Sign allowed."
-          onInput={(v) => setValue(applyMask(v, lengthMask))}
-        />
+        <div class="flex-1 min-w-0">
+          <HighlightedInput
+            sharedClass="font-mono text-[0.9rem]"
+            value={parsed.value}
+            placeholder="e.g. 10% or 100px"
+            title="Length: integer or float, optional unit `px` or `%`. Sign allowed."
+            onInput={(v) => setValue(applyMask(v, lengthMask))}
+          />
+        </div>
       {:else if option.value === "text"}
-        <HighlightedInput
-          sharedClass="font-mono text-[0.9rem]"
-          value={parsed.value}
-          placeholder="e.g. workspace_1"
-          title="Identifier: letters, digits, _, -"
-          onInput={(v) => setValue(applyMask(v, identifierMask))}
-        />
+        <div class="flex-1 min-w-0">
+          <HighlightedInput
+            sharedClass="font-mono text-[0.9rem]"
+            value={parsed.value}
+            placeholder="e.g. workspace_1"
+            title="Identifier: letters, digits, _, -"
+            onInput={(v) => setValue(applyMask(v, identifierMask))}
+          />
+        </div>
       {:else if option.value === "shellRest"}
-        <HighlightedInput
-          sharedClass="font-mono text-[0.9rem]"
-          value={parsed.value}
-          placeholder="e.g. notepad.exe"
-          onInput={(v) => setValue(v)}
-        />
-      {:else}
-        <div class="flex items-center justify-center text-[#555] font-mono border border-dashed border-[#333] rounded">—</div>
+        <div class="flex-1 min-w-0">
+          <HighlightedInput
+            sharedClass="font-mono text-[0.9rem]"
+            value={parsed.value}
+            placeholder="e.g. notepad.exe"
+            onInput={(v) => setValue(v)}
+          />
+        </div>
       {/if}
     </div>
   {:else}

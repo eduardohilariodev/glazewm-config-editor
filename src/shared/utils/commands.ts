@@ -29,15 +29,24 @@ export interface CommandVerb {
   name: string;
   /** Human-readable label shown in simple mode. Falls back to `name` if absent. */
   label?: string;
+  /** Label shown in Level 2 (subject) select of the cascading verb picker. */
+  subjectLabel?: string;
   description?: string;
   /** First option is the default when the verb is freshly selected. */
   options: CommandOption[];
 }
 
+export interface VerbGroup {
+  label: string;
+  verbs: string[];
+}
+
 export const VERBS: CommandVerb[] = [
+  // ── Focus & Navigation ─────────────────────────────────────────────────
   {
     name: "focus",
     label: "Focus",
+    subjectLabel: "Window",
     options: [
       { flag: "--workspace", label: "--workspace <name>", friendlyLabel: "Workspace", value: "workspace" },
       { flag: "--direction", label: "--direction <dir>", friendlyLabel: "Direction", value: "direction" },
@@ -48,6 +57,9 @@ export const VERBS: CommandVerb[] = [
       { flag: "--prev-active-workspace", label: "--prev-active-workspace", friendlyLabel: "Prev Active Workspace", value: "none" },
     ],
   },
+  { name: "wm-cycle-focus", label: "Cycle Focus", subjectLabel: "Cycle", options: [{ flag: null, label: "(no args)", value: "none" }] },
+
+  // ── Move & Resize ───────────────────────────────────────────────────────
   {
     name: "move",
     label: "Move Window",
@@ -64,15 +76,21 @@ export const VERBS: CommandVerb[] = [
       { flag: "--height", label: "--height <amount>", friendlyLabel: "Height", value: "amount" },
     ],
   },
-  {
-    name: "tiling-direction",
-    label: "Set Tiling Direction",
-    options: [{ flag: null, label: "<horizontal|vertical|toggle>", friendlyLabel: "Direction", value: "tilingDir" }],
-  },
-  { name: "toggle-tiling-direction", label: "Toggle Tiling Direction", options: [{ flag: null, label: "(no args)", value: "none" }] },
+
+  // ── Window State ────────────────────────────────────────────────────────
   {
     name: "toggle-floating",
     label: "Toggle Floating",
+    subjectLabel: "Floating",
+    options: [
+      { flag: null, label: "(no args)", value: "none" },
+      { flag: "--centered", label: "--centered", value: "none" },
+    ],
+  },
+  {
+    name: "set-floating",
+    label: "Set Floating",
+    subjectLabel: "Floating",
     options: [
       { flag: null, label: "(no args)", value: "none" },
       { flag: "--centered", label: "--centered", value: "none" },
@@ -81,53 +99,97 @@ export const VERBS: CommandVerb[] = [
   {
     name: "toggle-fullscreen",
     label: "Toggle Fullscreen",
+    subjectLabel: "Fullscreen",
     options: [
       { flag: null, label: "(no args)", value: "none" },
       { flag: "--maximized", label: "--maximized", value: "none" },
-    ],
-  },
-  { name: "toggle-minimized", label: "Toggle Minimized", options: [{ flag: null, label: "(no args)", value: "none" }] },
-  { name: "toggle-tiling", label: "Toggle Tiling", options: [{ flag: null, label: "(no args)", value: "none" }] },
-  {
-    name: "set-floating",
-    label: "Set Floating",
-    options: [
-      { flag: null, label: "(no args)", value: "none" },
-      { flag: "--centered", label: "--centered", value: "none" },
     ],
   },
   {
     name: "set-fullscreen",
     label: "Set Fullscreen",
+    subjectLabel: "Fullscreen",
     options: [
       { flag: null, label: "(no args)", value: "none" },
       { flag: "--maximized", label: "--maximized", value: "none" },
     ],
   },
-  { name: "set-minimized", label: "Set Minimized", options: [{ flag: null, label: "(no args)", value: "none" }] },
-  { name: "set-tiling", label: "Set Tiling", options: [{ flag: null, label: "(no args)", value: "none" }] },
-  { name: "close", label: "Close Window", options: [{ flag: null, label: "(no args)", value: "none" }] },
-  { name: "wm-cycle-focus", label: "Cycle Focus", options: [{ flag: null, label: "(no args)", value: "none" }] },
-  { name: "wm-reload-config", label: "Reload Config", options: [{ flag: null, label: "(no args)", value: "none" }] },
-  { name: "wm-redraw", label: "Redraw Windows", options: [{ flag: null, label: "(no args)", value: "none" }] },
-  { name: "wm-exit", label: "Exit WM", options: [{ flag: null, label: "(no args)", value: "none" }] },
-  { name: "wm-toggle-pause", label: "Toggle Pause", options: [{ flag: null, label: "(no args)", value: "none" }] },
+  { name: "toggle-minimized", label: "Toggle Minimized", subjectLabel: "Minimized", options: [{ flag: null, label: "(no args)", value: "none" }] },
+  { name: "set-minimized", label: "Set Minimized", subjectLabel: "Minimized", options: [{ flag: null, label: "(no args)", value: "none" }] },
+  { name: "toggle-tiling", label: "Toggle Tiling", subjectLabel: "Tiling", options: [{ flag: null, label: "(no args)", value: "none" }] },
+  { name: "set-tiling", label: "Set Tiling", subjectLabel: "Tiling", options: [{ flag: null, label: "(no args)", value: "none" }] },
+  { name: "close", label: "Close Window", subjectLabel: "Close", options: [{ flag: null, label: "(no args)", value: "none" }] },
+  { name: "ignore", label: "Ignore Window", subjectLabel: "Ignore", options: [{ flag: null, label: "(no args)", value: "none" }] },
+
+  // ── Tiling Layout ───────────────────────────────────────────────────────
+  {
+    name: "tiling-direction",
+    label: "Set Tiling Direction",
+    options: [{ flag: null, label: "<horizontal|vertical|toggle>", friendlyLabel: "Direction", value: "tilingDir" }],
+  },
+  { name: "toggle-tiling-direction", label: "Toggle Tiling Direction", subjectLabel: "Tiling Direction", options: [{ flag: null, label: "(no args)", value: "none" }] },
+
+  // ── Window Manager ──────────────────────────────────────────────────────
+  { name: "wm-reload-config", label: "Reload Config", subjectLabel: "Reload Config", options: [{ flag: null, label: "(no args)", value: "none" }] },
+  { name: "wm-redraw", label: "Redraw Windows", subjectLabel: "Redraw", options: [{ flag: null, label: "(no args)", value: "none" }] },
+  { name: "wm-toggle-pause", label: "Toggle Pause", subjectLabel: "Toggle Pause", options: [{ flag: null, label: "(no args)", value: "none" }] },
   {
     name: "wm-enable-binding-mode",
     label: "Enable Binding Mode",
+    subjectLabel: "Enable Mode",
     options: [{ flag: "--name", label: "--name <mode>", friendlyLabel: "Mode Name", value: "text" }],
   },
   {
     name: "wm-disable-binding-mode",
     label: "Disable Binding Mode",
+    subjectLabel: "Disable Mode",
     options: [{ flag: "--name", label: "--name <mode>", friendlyLabel: "Mode Name", value: "text" }],
   },
-  { name: "shell-exec", label: "Run Shell Command", options: [{ flag: null, label: "<command...>", friendlyLabel: "Command", value: "shellRest" }] },
-  { name: "ignore", label: "Ignore Window", options: [{ flag: null, label: "(no args)", value: "none" }] },
+  { name: "wm-exit", label: "Exit WM", subjectLabel: "Exit", options: [{ flag: null, label: "(no args)", value: "none" }] },
+
+  // ── System ──────────────────────────────────────────────────────────────
+  { name: "shell-exec", label: "Run Shell Command", subjectLabel: "Run", options: [{ flag: null, label: "<command...>", friendlyLabel: "Command", value: "shellRest" }] },
+];
+
+/** Lookup map for O(1) verb access by name. */
+export const VERB_MAP = new Map<string, CommandVerb>(VERBS.map((v) => [v.name, v]));
+
+/** Semantic groups that drive `<optgroup>` rendering in the command dropdown. */
+export const VERB_GROUPS: VerbGroup[] = [
+  { label: "Focus & Navigation", verbs: ["focus", "wm-cycle-focus"] },
+  { label: "Move & Resize",      verbs: ["move", "resize"] },
+  {
+    label: "Window State",
+    verbs: [
+      "toggle-floating", "set-floating",
+      "toggle-fullscreen", "set-fullscreen",
+      "toggle-minimized", "set-minimized",
+      "toggle-tiling", "set-tiling",
+      "close", "ignore",
+    ],
+  },
+  { label: "Tiling Layout",  verbs: ["tiling-direction", "toggle-tiling-direction"] },
+  {
+    label: "Window Manager",
+    verbs: ["wm-reload-config", "wm-redraw", "wm-toggle-pause", "wm-enable-binding-mode", "wm-disable-binding-mode", "wm-exit"],
+  },
+  { label: "System", verbs: ["shell-exec"] },
 ];
 
 export const DIRECTIONS = ["left", "right", "up", "down"] as const;
+export const DIRECTION_LABELS: Record<string, string> = {
+  left: "Left",
+  right: "Right",
+  up: "Up",
+  down: "Down",
+};
+
 export const TILING_DIRS = ["horizontal", "vertical", "toggle"] as const;
+export const TILING_DIR_LABELS: Record<string, string> = {
+  horizontal: "Horizontal",
+  vertical: "Vertical",
+  toggle: "Toggle",
+};
 
 export interface ParsedCommand {
   ok: boolean;
@@ -191,3 +253,23 @@ export function buildCommand(verbIdx: number, optionIdx: number, value: string):
   if (opt.value !== "none" && value.trim()) tokens.push(value.trim());
   return tokens.join(" ");
 }
+
+/** Two-level cascading verb picker: action category → specific verb. */
+export interface VerbCategory {
+  label: string;
+  /** Label used in advanced mode. Falls back to `label` if absent. */
+  advancedLabel?: string;
+  /** Verb names belonging to this category (in display order). */
+  verbs: string[];
+}
+
+export const VERB_CATEGORIES: VerbCategory[] = [
+  { label: "Focus",  verbs: ["focus", "wm-cycle-focus"] },
+  { label: "Move",   verbs: ["move"] },
+  { label: "Resize", verbs: ["resize"] },
+  { label: "Set",    advancedLabel: "set-*",    verbs: ["set-floating", "set-fullscreen", "set-minimized", "set-tiling"] },
+  { label: "Toggle", advancedLabel: "toggle-*", verbs: ["toggle-floating", "toggle-fullscreen", "toggle-minimized", "toggle-tiling", "toggle-tiling-direction"] },
+  { label: "Tiling", verbs: ["tiling-direction"] },
+  { label: "GlazeWM", advancedLabel: "wm-*",     verbs: ["wm-reload-config", "wm-redraw", "wm-toggle-pause", "wm-enable-binding-mode", "wm-disable-binding-mode", "wm-exit"] },
+  { label: "System", verbs: ["shell-exec", "close", "ignore"] },
+];
