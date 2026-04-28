@@ -17,7 +17,7 @@
       {checked}
       onchange={(e) => onChange((e.currentTarget as HTMLInputElement).checked)}
     />
-    <div class="w-8 h-4 rounded-full bg-[#444] peer-checked:bg-[#0289a3] transition-colors"></div>
+    <div class="w-8 h-4 rounded-full bg-[#444] peer-checked:bg-primary transition-colors"></div>
     <div class="absolute top-0.5 left-0.5 w-3 h-3 rounded-full bg-white transition-transform peer-checked:translate-x-4"></div>
   </div>
 </label>
