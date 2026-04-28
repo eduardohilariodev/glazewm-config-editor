@@ -15,7 +15,8 @@
   import { setContext } from "svelte";
   import { startWindowPick, type PickerFocus } from "$shared/tauri";
   import { escapeLiteral, patternToTags, tagsToPattern } from "$shared/utils/regex";
-  import { Crosshair, Plus, X, MagnifyingGlass } from "phosphor-svelte";
+  import { semanticLabel } from "$shared/utils/commands";
+  import { Crosshair, Plus, X, MagnifyingGlass, PencilSimple, Check } from "phosphor-svelte";
   import { i18n } from "$shared/i18n/index.svelte";
 
   interface Props {
@@ -31,6 +32,14 @@
   function matches(rule: WindowRuleConfig): boolean {
     if (!q) return true;
     const parts: string[] = [...rule.commands];
+    // Include semantic labels so "Set Floating" matches "set-floating".
+    for (const cmd of rule.commands) {
+      const label = semanticLabel(cmd);
+      if (label.ok) {
+        parts.push(label.primary);
+        if (label.secondary) parts.push(label.secondary);
+      }
+    }
     for (const m of rule.match) {
       for (const k of FIELDS) parts.push(getValue(m, k));
     }
@@ -126,11 +135,49 @@
     onPatch((all) => all[i].commands.splice(j, 1));
   }
 
+  // Edit mode ───────────────────────────────────────────────────────────────
+  let editModes = $state(new Set<number>());
+
+  function isEditing(i: number): boolean {
+    return editModes.has(i);
+  }
+  function startEdit(i: number) {
+    const next = new Set(editModes);
+    next.add(i);
+    editModes = next;
+  }
+  function stopEdit(i: number) {
+    const next = new Set(editModes);
+    next.delete(i);
+    editModes = next;
+  }
+
+  // Keep editModes in sync when rules are replaced externally (undo/redo).
+  $effect(() => {
+    const len = rules.length;
+    const outOfBounds = [...editModes].some((idx) => idx >= len);
+    if (outOfBounds) {
+      editModes = new Set([...editModes].filter((idx) => idx < len));
+    }
+  });
+
   function addRule() {
+    const nextIdx = rules.length;
     onPatch((rs) => rs.push({ commands: [], match: [{}] }));
+    // Auto-open edit mode for the newly created rule.
+    const next = new Set(editModes);
+    next.add(nextIdx);
+    editModes = next;
   }
   function removeRule(i: number) {
     onPatch((rs) => rs.splice(i, 1));
+    // Shift all indices above the removed one down by one.
+    const next = new Set<number>();
+    for (const idx of editModes) {
+      if (idx < i) next.add(idx);
+      else if (idx > i) next.add(idx - 1);
+    }
+    editModes = next;
   }
   function addMatch(i: number) {
     onPatch((rs) => rs[i].match.push({}));
@@ -252,145 +299,215 @@
 
   {#each rules as rule, i (i)}
     {@const visible = matches(rule)}
+    {@const editing = isEditing(i)}
     <fieldset
-      class="border rounded-md p-4 flex flex-col gap-3 {q && visible ? 'border-[#ffd97a]' : 'border-[#333]'}"
+      class="border rounded-md p-4 flex flex-col gap-3 {q && visible ? 'border-[#ffd97a]' : editing ? 'border-[#0289a3]' : 'border-[#333]'}"
       class:hidden={!visible}
     >
       <legend class="px-2 text-[#ccc] w-full flex items-center gap-2">
         <span>{i18n.t.rules.ruleTitle(i + 1)}</span>
         <span class="flex-1 border-t border-[#444]"></span>
+        {#if editing}
+          <button
+            type="button"
+            class="inline-flex items-center gap-1 px-[0.5rem] py-[0.15rem] text-[0.75rem] border border-[#0289a3] rounded bg-[#012e37] text-[#0289a3] cursor-pointer hover:bg-[#01404f]"
+            onclick={() => stopEdit(i)}
+          ><Check size={11} weight="bold" />{i18n.t.rules.done}</button>
+        {:else}
+          <button
+            type="button"
+            class="inline-flex items-center gap-1 px-[0.4rem] py-[0.15rem] text-[0.75rem] border border-[#444] rounded bg-[#2a2a2a] text-[#888] cursor-pointer hover:bg-[#3a3a3a] hover:text-inherit hover:border-[#666]"
+            onclick={() => startEdit(i)}
+          ><PencilSimple size={11} weight="bold" />{i18n.t.rules.edit}</button>
+        {/if}
         <button
           type="button"
-          class="ml-auto inline-flex items-center gap-1 px-[0.4rem] py-[0.15rem] text-[0.75rem] border border-[#444] rounded bg-[#2a2a2a] text-[#888] cursor-pointer hover:bg-[#3a3a3a] hover:text-[#f88] hover:border-[#f88]"
+          class="inline-flex items-center gap-1 px-[0.4rem] py-[0.15rem] text-[0.75rem] border border-[#444] rounded bg-[#2a2a2a] text-[#888] cursor-pointer hover:bg-[#3a3a3a] hover:text-[#f88] hover:border-[#f88]"
           onclick={() => removeRule(i)}
         ><X size={11} weight="bold" />{i18n.t.rules.removeRule}</button>
       </legend>
-      <div class="flex flex-col gap-[0.4rem]">
-        <span class="text-[0.85rem] text-[#888]">{i18n.t.rules.commands}</span>
-        {#each rule.commands as c, j (j)}
-          <Stepper index={j} total={rule.commands.length}>
-            <CommandBuilder
-              value={c}
-              {workspaces}
-              onChange={(v) => setCommand(i, j, v)}
-              onRemove={rule.commands.length > 1 ? () => removeCommand(i, j) : undefined}
-            />
-          </Stepper>
-        {/each}
-        <button
-          type="button"
-          class="w-full inline-flex items-center justify-center gap-1.5 px-[0.6rem] py-[0.4rem] text-[0.85rem] border border-dashed border-[#444] rounded bg-[#222] text-[#bbb] cursor-pointer hover:bg-[#2a2a2a] hover:border-[#666] hover:text-inherit"
-          onclick={() => addCommand(i)}
-        ><Plus size={14} weight="bold" />{i18n.t.rules.addCommand}</button>
-      </div>
 
-      <div class="flex flex-col gap-2">
-        <span class="text-[0.85rem] text-[#888]">{i18n.t.rules.matchConditions}</span>
-        {#each rule.match as m, j (j)}
-          <div class="border border-dashed border-[#333] rounded p-[0.6rem] flex flex-col gap-[0.6rem]">
-            <div class="flex items-center gap-2">
-              <span class="text-[0.75rem] uppercase tracking-wide text-[#888]">{i18n.t.rules.conditionTitle(j + 1)}</span>
-              <span class="flex-1 border-t border-[#333]"></span>
-              {#if rule.match.length > 1}
-                <button
-                  type="button"
-                  class="inline-flex items-center gap-1 px-[0.4rem] py-[0.15rem] text-[0.75rem] border border-[#444] rounded bg-[#2a2a2a] text-[#888] cursor-pointer hover:bg-[#3a3a3a] hover:text-[#f88] hover:border-[#f88]"
-                  onclick={() => removeMatch(i, j)}
-                  title={i18n.t.rules.removeCondition}
-                  aria-label={i18n.t.rules.removeCondition}
-                ><X size={11} weight="bold" />{i18n.t.rules.removeCondition}</button>
-              {/if}
-            </div>
-            {#each FIELDS as key (key)}
-              {@const op = getOp(m, key)}
-              {@const value = getValue(m, key)}
-              {@const isPickingThis = pickingAt?.i === i && pickingAt?.j === j && pickingAt?.key === key}
-              {@const isRegex = op === "regex" || op === "not_regex"}
-              <div class="grid grid-cols-[6rem_8rem_1fr_auto] gap-[0.6rem] items-center">
-                <span class="text-[#aaa] text-[0.85rem]">{FIELD_LABEL[key]}</span>
-                <select
-                  class="w-full box-border px-[0.6rem] py-[0.4rem] border border-[#444] rounded bg-[#1e1e1e] text-inherit font-[inherit]"
-                  value={op}
-                  onchange={(e) =>
-                    setOp(i, j, key, (e.currentTarget as HTMLSelectElement).value as MatchOp)}
-                >
-                  {#each MATCH_OPS as o (o)}
-                    <option value={o}>{OP_LABEL[o]}</option>
-                  {/each}
-                </select>
-                <div class="min-w-0">
-                  {#if op === "regex" || op === "not_regex"}
-                    <RegexTagInput
-                      {value}
-                      placeholder={FIELD_PLACEHOLDER[key]}
-                      onChange={(v) => setField(i, j, key, op, v)}
-                    />
-                  {:else}
-                    <HighlightedInput
-                      {value}
-                      placeholder={FIELD_PLACEHOLDER[key]}
-                      sharedClass="font-[inherit] text-inherit text-[1rem]"
-                      onInput={(v) => setField(i, j, key, op, v)}
-                    />
-                  {/if}
-                </div>
-                <div class="relative">
+      {#if editing}
+        <!-- ── Edit mode ──────────────────────────────────────────────────── -->
+        <div class="flex flex-col gap-[0.4rem]">
+          <span class="text-[0.85rem] text-[#888]">{i18n.t.rules.commands}</span>
+          {#each rule.commands as c, j (j)}
+            <Stepper index={j} total={rule.commands.length}>
+              <CommandBuilder
+                value={c}
+                {workspaces}
+                onChange={(v) => setCommand(i, j, v)}
+                onRemove={rule.commands.length > 1 ? () => removeCommand(i, j) : undefined}
+              />
+            </Stepper>
+          {/each}
+          <button
+            type="button"
+            class="w-full inline-flex items-center justify-center gap-1.5 px-[0.6rem] py-[0.4rem] text-[0.85rem] border border-dashed border-[#444] rounded bg-[#222] text-[#bbb] cursor-pointer hover:bg-[#2a2a2a] hover:border-[#666] hover:text-inherit"
+            onclick={() => addCommand(i)}
+          ><Plus size={14} weight="bold" />{i18n.t.rules.addCommand}</button>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <span class="text-[0.85rem] text-[#888]">{i18n.t.rules.matchConditions}</span>
+          {#each rule.match as m, j (j)}
+            <div class="border border-dashed border-[#333] rounded p-[0.6rem] flex flex-col gap-[0.6rem]">
+              <div class="flex items-center gap-2">
+                <span class="text-[0.75rem] uppercase tracking-wide text-[#888]">{i18n.t.rules.conditionTitle(j + 1)}</span>
+                <span class="flex-1 border-t border-[#333]"></span>
+                {#if rule.match.length > 1}
                   <button
                     type="button"
-                    title={isPickingThis
-                      ? i18n.t.rules.pickerPicking
-                      : isRegex
-                        ? i18n.t.rules.pickerRegexHint
-                        : i18n.t.rules.pickerSingleHint(FIELD_PROPERTY_NAME[key])}
-                    aria-label={i18n.t.rules.pickerAria}
-                    aria-haspopup={isRegex ? "menu" : undefined}
-                    aria-expanded={isRegex ? isMenuOpen(i, j, key) : undefined}
-                    class="inline-flex items-center justify-center p-[0.35rem] border rounded bg-[#2a2a2a] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed {isPickingThis ? 'border-[#ffd97a] text-[#ffd97a] animate-pulse' : isMenuOpen(i, j, key) ? 'border-[#0289a3] text-inherit' : 'border-[#444] text-inherit hover:bg-[#3a3a3a]'}"
-                    disabled={pickingAt !== null}
-                    onclick={(e) => {
-                      e.stopPropagation();
-                      if (isRegex) {
-                        toggleMenu(i, j, key);
-                      } else {
-                        pickWindow(i, j, key, "replace-single");
-                      }
-                    }}
-                  >
-                    <Crosshair size={14} weight="bold" />
-                  </button>
-                  {#if isRegex && isMenuOpen(i, j, key)}
-                    <div
-                      role="menu"
-                      tabindex="-1"
-                      class="absolute right-0 top-full mt-1 z-20 min-w-[16rem] flex flex-col border border-[#444] rounded bg-[#1e1e1e] shadow-lg overflow-hidden"
-                      onclick={(e) => e.stopPropagation()}
-                      onkeydown={(e) => e.stopPropagation()}
-                    >
-                      <button
-                        type="button"
-                        role="menuitem"
-                        class="text-left px-[0.7rem] py-[0.45rem] text-[0.85rem] text-inherit hover:bg-[#2a2a2a] cursor-pointer"
-                        onclick={() => pickWindow(i, j, key, "replace-regex")}
-                      >Replace regex with {FIELD_PROPERTY_NAME[key]}</button>
-                      <button
-                        type="button"
-                        role="menuitem"
-                        class="text-left px-[0.7rem] py-[0.45rem] text-[0.85rem] text-inherit hover:bg-[#2a2a2a] cursor-pointer border-t border-[#333]"
-                        onclick={() => pickWindow(i, j, key, "append-regex")}
-                      >Append {FIELD_PROPERTY_NAME[key]} to list</button>
-                    </div>
-                  {/if}
-                </div>
+                    class="inline-flex items-center gap-1 px-[0.4rem] py-[0.15rem] text-[0.75rem] border border-[#444] rounded bg-[#2a2a2a] text-[#888] cursor-pointer hover:bg-[#3a3a3a] hover:text-[#f88] hover:border-[#f88]"
+                    onclick={() => removeMatch(i, j)}
+                    title={i18n.t.rules.removeCondition}
+                    aria-label={i18n.t.rules.removeCondition}
+                  ><X size={11} weight="bold" />{i18n.t.rules.removeCondition}</button>
+                {/if}
               </div>
-            {/each}
+              {#each FIELDS as key (key)}
+                {@const op = getOp(m, key)}
+                {@const value = getValue(m, key)}
+                {@const isPickingThis = pickingAt?.i === i && pickingAt?.j === j && pickingAt?.key === key}
+                {@const isRegex = op === "regex" || op === "not_regex"}
+                <div class="grid grid-cols-[6rem_8rem_1fr_auto] gap-[0.6rem] items-center">
+                  <span class="text-[#aaa] text-[0.85rem]">{FIELD_LABEL[key]}</span>
+                  <select
+                    class="w-full box-border px-[0.6rem] py-[0.4rem] border border-[#444] rounded bg-[#1e1e1e] text-inherit font-[inherit]"
+                    value={op}
+                    onchange={(e) =>
+                      setOp(i, j, key, (e.currentTarget as HTMLSelectElement).value as MatchOp)}
+                  >
+                    {#each MATCH_OPS as o (o)}
+                      <option value={o}>{OP_LABEL[o]}</option>
+                    {/each}
+                  </select>
+                  <div class="min-w-0">
+                    {#if op === "regex" || op === "not_regex"}
+                      <RegexTagInput
+                        {value}
+                        placeholder={FIELD_PLACEHOLDER[key]}
+                        onChange={(v) => setField(i, j, key, op, v)}
+                      />
+                    {:else}
+                      <HighlightedInput
+                        {value}
+                        placeholder={FIELD_PLACEHOLDER[key]}
+                        sharedClass="font-[inherit] text-inherit text-[1rem]"
+                        onInput={(v) => setField(i, j, key, op, v)}
+                      />
+                    {/if}
+                  </div>
+                  <div class="relative">
+                    <button
+                      type="button"
+                      title={isPickingThis
+                        ? i18n.t.rules.pickerPicking
+                        : isRegex
+                          ? i18n.t.rules.pickerRegexHint
+                          : i18n.t.rules.pickerSingleHint(FIELD_PROPERTY_NAME[key])}
+                      aria-label={i18n.t.rules.pickerAria}
+                      aria-haspopup={isRegex ? "menu" : undefined}
+                      aria-expanded={isRegex ? isMenuOpen(i, j, key) : undefined}
+                      class="inline-flex items-center justify-center p-[0.35rem] border rounded bg-[#2a2a2a] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed {isPickingThis ? 'border-[#ffd97a] text-[#ffd97a] animate-pulse' : isMenuOpen(i, j, key) ? 'border-[#0289a3] text-inherit' : 'border-[#444] text-inherit hover:bg-[#3a3a3a]'}"
+                      disabled={pickingAt !== null}
+                      onclick={(e) => {
+                        e.stopPropagation();
+                        if (isRegex) {
+                          toggleMenu(i, j, key);
+                        } else {
+                          pickWindow(i, j, key, "replace-single");
+                        }
+                      }}
+                    >
+                      <Crosshair size={14} weight="bold" />
+                    </button>
+                    {#if isRegex && isMenuOpen(i, j, key)}
+                      <div
+                        role="menu"
+                        tabindex="-1"
+                        class="absolute right-0 top-full mt-1 z-20 min-w-[16rem] flex flex-col border border-[#444] rounded bg-[#1e1e1e] shadow-lg overflow-hidden"
+                        onclick={(e) => e.stopPropagation()}
+                        onkeydown={(e) => e.stopPropagation()}
+                      >
+                        <button
+                          type="button"
+                          role="menuitem"
+                          class="text-left px-[0.7rem] py-[0.45rem] text-[0.85rem] text-inherit hover:bg-[#2a2a2a] cursor-pointer"
+                          onclick={() => pickWindow(i, j, key, "replace-regex")}
+                        >Replace regex with {FIELD_PROPERTY_NAME[key]}</button>
+                        <button
+                          type="button"
+                          role="menuitem"
+                          class="text-left px-[0.7rem] py-[0.45rem] text-[0.85rem] text-inherit hover:bg-[#2a2a2a] cursor-pointer border-t border-[#333]"
+                          onclick={() => pickWindow(i, j, key, "append-regex")}
+                        >Append {FIELD_PROPERTY_NAME[key]} to list</button>
+                      </div>
+                    {/if}
+                  </div>
+                </div>
+              {/each}
+              </div>
+          {/each}
+          <button
+            type="button"
+            class="w-full inline-flex items-center justify-center gap-1.5 px-[0.6rem] py-[0.4rem] text-[0.85rem] border border-dashed border-[#444] rounded bg-[#222] text-[#bbb] cursor-pointer hover:bg-[#2a2a2a] hover:border-[#666] hover:text-inherit"
+            onclick={() => addMatch(i)}
+          ><Plus size={14} weight="bold" />{i18n.t.rules.addCondition}</button>
+        </div>
+
+      {:else}
+        <!-- ── Read mode ───────────────────────────────────────────────────── -->
+        <div class="flex flex-col gap-[0.35rem]">
+          <span class="text-[0.75rem] uppercase tracking-wide text-[#666]">{i18n.t.rules.commands}</span>
+          {#if rule.commands.length === 0}
+            <span class="text-[#555] text-[0.85rem] italic">(none)</span>
+          {:else}
+            <div class="flex flex-wrap gap-1.5">
+              {#each rule.commands as cmd (cmd)}
+                {@const label = semanticLabel(cmd)}
+                {#if label.ok}
+                  <span class="inline-flex items-center gap-0 rounded overflow-hidden border border-[#335] text-[0.8rem]">
+                    <span class="bg-[#1a2535] text-[#7ab3e0] px-[0.55rem] py-[0.2rem] font-medium">{label.primary}</span>
+                    {#if label.secondary}
+                      <span class="bg-[#12161d] text-[#ccc] px-[0.5rem] py-[0.2rem] border-l border-[#335]">{label.secondary}</span>
+                    {/if}
+                  </span>
+                {:else}
+                  <code class="rounded border border-[#444] bg-[#1e1e1e] text-[#d8a657] px-[0.55rem] py-[0.2rem] text-[0.8rem] font-mono">{label.primary}</code>
+                {/if}
+              {/each}
             </div>
-        {/each}
-        <button
-          type="button"
-          class="w-full inline-flex items-center justify-center gap-1.5 px-[0.6rem] py-[0.4rem] text-[0.85rem] border border-dashed border-[#444] rounded bg-[#222] text-[#bbb] cursor-pointer hover:bg-[#2a2a2a] hover:border-[#666] hover:text-inherit"
-          onclick={() => addMatch(i)}
-        ><Plus size={14} weight="bold" />{i18n.t.rules.addCondition}</button>
-      </div>
+          {/if}
+        </div>
+
+        <div class="flex flex-col gap-[0.35rem]">
+          <span class="text-[0.75rem] uppercase tracking-wide text-[#666]">{i18n.t.rules.matchConditions}</span>
+          {#each rule.match as m, j (j)}
+            {#if j > 0}
+              <div class="flex items-center gap-2 my-[0.1rem]">
+                <span class="flex-1 border-t border-[#2a2a2a]"></span>
+                <span class="text-[0.7rem] uppercase tracking-widest text-[#555]">or</span>
+                <span class="flex-1 border-t border-[#2a2a2a]"></span>
+              </div>
+            {/if}
+            {@const setFields = FIELDS.filter((k) => getValue(m, k))}
+            {#if setFields.length === 0}
+              <span class="text-[#555] text-[0.85rem] italic">{i18n.t.rules.anyWindow}</span>
+            {:else}
+              <div class="flex flex-wrap gap-x-4 gap-y-[0.25rem]">
+                {#each setFields as key (key)}
+                  <span class="text-[0.85rem]">
+                    <span class="text-[#777]">{FIELD_LABEL[key]}</span>
+                    <span class="text-[#555] mx-1">{OP_LABEL[getOp(m, key)]}</span>
+                    <span class="text-[#ddd] font-mono text-[0.8rem]">{getValue(m, key)}</span>
+                  </span>
+                {/each}
+              </div>
+            {/if}
+          {/each}
+        </div>
+      {/if}
     </fieldset>
   {/each}
   <button
