@@ -11,6 +11,7 @@
     positiveIntegerMask,
   } from "$shared/utils/masks";
   import KbdSequence from "$shared/ui/KbdSequence.svelte";
+  import InfoIcon from "$shared/ui/InfoIcon.svelte";
   import { i18n } from "$shared/i18n/index.svelte";
   import { Plus, X, CaretUp, CaretDown } from "phosphor-svelte";
 
@@ -108,10 +109,18 @@
   <table class="w-full border-collapse">
     <thead>
       <tr>
-        <th class="text-left p-2 text-[#aaa] font-medium border-b border-[#333]">{i18n.t.workspaces.name}</th>
-        <th class="text-left p-2 text-[#aaa] font-medium border-b border-[#333]">{i18n.t.workspaces.displayName}</th>
-        <th class="text-left p-2 text-[#aaa] font-medium border-b border-[#333]">{i18n.t.workspaces.bindToMonitor}</th>
-        <th class="text-left p-2 text-[#aaa] font-medium border-b border-[#333]">{i18n.t.workspaces.keybinding}</th>
+        <th class="text-left p-2 text-[#aaa] font-medium border-b border-[#333]">
+          <span class="inline-flex items-center gap-1">{i18n.t.workspaces.name} <InfoIcon text="Unique identifier for the workspace. Used in commands like 'focus --workspace 1'." /></span>
+        </th>
+        <th class="text-left p-2 text-[#aaa] font-medium border-b border-[#333]">
+          <span class="inline-flex items-center gap-1">{i18n.t.workspaces.displayName} <InfoIcon text="Optional friendly name shown in status bars (e.g. '1 · Web')." /></span>
+        </th>
+        <th class="text-left p-2 text-[#aaa] font-medium border-b border-[#333]">
+          <span class="inline-flex items-center gap-1">{i18n.t.workspaces.bindToMonitor} <InfoIcon text="Pin this workspace to a specific monitor by index (0-based). Leave blank to allow any monitor." /></span>
+        </th>
+        <th class="text-left p-2 text-[#aaa] font-medium border-b border-[#333]">
+          <span class="inline-flex items-center gap-1">{i18n.t.workspaces.keybinding} <InfoIcon text="Key binding(s) to focus this workspace." /></span>
+        </th>
         <th class="text-left p-2 text-[#aaa] font-medium border-b border-[#333]"></th>
       </tr>
     </thead>

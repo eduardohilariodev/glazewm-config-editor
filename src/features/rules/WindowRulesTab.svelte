@@ -11,6 +11,7 @@
   import CommandBuilder from "$shared/ui/CommandBuilder.svelte";
   import Stepper from "$shared/ui/Stepper.svelte";
   import HighlightedInput from "$shared/ui/HighlightedInput.svelte";
+  import InfoIcon from "$shared/ui/InfoIcon.svelte";
   import { setContext } from "svelte";
   import { startWindowPick, type PickerFocus } from "$shared/tauri";
   import { escapeLiteral, patternToTags, tagsToPattern } from "$shared/utils/regex";
@@ -241,6 +242,10 @@
       >{i18n.t.rules.clear}</button>
     {/if}
   </div>
+  <p class="m-0 text-[#777] text-[0.8rem] inline-flex items-center gap-1">
+    <InfoIcon text="Window rules automatically apply commands to windows matching the specified process, class, or title conditions." />
+    Rules apply commands to matching windows automatically.
+  </p>
 
   {#each rules as rule, i (i)}
     {@const visible = matches(rule)}
@@ -248,7 +253,14 @@
       class="border rounded-md p-4 flex flex-col gap-3 {q && visible ? 'border-[#ffd97a]' : 'border-[#333]'}"
       class:hidden={!visible}
     >
-      <legend class="px-2 text-[#ccc]">{i18n.t.rules.ruleTitle(i + 1)}</legend>
+      <legend class="px-2 text-[#ccc] w-full flex items-center">
+        <span>{i18n.t.rules.ruleTitle(i + 1)}</span>
+        <button
+          type="button"
+          class="ml-auto inline-flex items-center gap-1 px-[0.4rem] py-[0.15rem] text-[0.75rem] border border-[#444] rounded bg-[#2a2a2a] text-[#f88] cursor-pointer hover:bg-[#3a3a3a]"
+          onclick={() => removeRule(i)}
+        ><X size={11} weight="bold" />{i18n.t.rules.removeRule}</button>
+      </legend>
       <div class="flex flex-col gap-[0.4rem]">
         <span class="text-[0.85rem] text-[#888]">{i18n.t.rules.commands}</span>
         {#each rule.commands as c, j (j)}
@@ -372,12 +384,6 @@
           onclick={() => addMatch(i)}
         ><Plus size={14} weight="bold" />{i18n.t.rules.addCondition}</button>
       </div>
-
-      <button
-        type="button"
-        class="self-start inline-flex items-center gap-1.5 px-[0.8rem] py-[0.4rem] border border-[#444] rounded bg-[#2a2a2a] text-[#f88] cursor-pointer hover:bg-[#3a3a3a]"
-        onclick={() => removeRule(i)}
-      ><X size={14} weight="bold" />{i18n.t.rules.removeRule}</button>
     </fieldset>
   {/each}
   <button

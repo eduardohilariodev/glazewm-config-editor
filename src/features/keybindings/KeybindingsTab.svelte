@@ -3,6 +3,7 @@
   import KeyCaptureInput from "$shared/ui/KeyCaptureInput.svelte";
   import CommandBuilder from "$shared/ui/CommandBuilder.svelte";
   import Stepper from "$shared/ui/Stepper.svelte";
+  import InfoIcon from "$shared/ui/InfoIcon.svelte";
   import { setContext } from "svelte";
   import { Plus, X } from "phosphor-svelte";
   import { i18n } from "$shared/i18n/index.svelte";
@@ -67,6 +68,10 @@
       >{i18n.t.keybindings.clear}</button>
     {/if}
   </div>
+  <p class="m-0 text-[#777] text-[0.8rem] inline-flex items-center gap-1">
+    <InfoIcon text="Each keybinding entry maps one or more key combos to a sequence of commands. Commands run in order when any of the bound keys are pressed." />
+    Keybindings trigger commands when key combinations are pressed.
+  </p>
 
   {#each keybindings as kb, i (i)}
     {@const visible = matches(kb)}
@@ -74,7 +79,14 @@
       class="border rounded-md p-4 flex flex-col gap-[0.85rem] {q && visible ? 'border-[#ffd97a]' : 'border-[#333]'}"
       class:hidden={!visible}
     >
-      <legend class="px-2 text-[#ccc]">{i18n.t.keybindings.keybindingTitle(i + 1)}</legend>
+      <legend class="px-2 text-[#ccc] w-full flex items-center">
+        <span>{i18n.t.keybindings.keybindingTitle(i + 1)}</span>
+        <button
+          type="button"
+          class="ml-auto inline-flex items-center gap-1 px-[0.4rem] py-[0.15rem] text-[0.75rem] border border-[#444] rounded bg-[#2a2a2a] text-[#f88] cursor-pointer hover:bg-[#3a3a3a]"
+          onclick={() => remove(i)}
+        ><X size={11} weight="bold" />{i18n.t.keybindings.removeKeybinding}</button>
+      </legend>
 
       <div class="flex flex-col gap-[0.4rem]">
         <span class="text-[0.85rem] text-[#888]">{i18n.t.keybindings.bindings}</span>
@@ -110,12 +122,6 @@
           onclick={() => addCommand(i)}
         ><Plus size={14} weight="bold" />{i18n.t.keybindings.addCommand}</button>
       </div>
-
-      <button
-        type="button"
-        class="self-end inline-flex items-center gap-1.5 px-[0.8rem] py-[0.4rem] border border-[#444] rounded bg-[#2a2a2a] text-[#f88] cursor-pointer font-[inherit] hover:bg-[#3a3a3a]"
-        onclick={() => remove(i)}
-      ><X size={14} weight="bold" />{i18n.t.keybindings.removeKeybinding}</button>
     </fieldset>
   {/each}
   <button

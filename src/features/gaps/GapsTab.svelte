@@ -2,6 +2,7 @@
   import type { GapsConfig } from "$shared/types/config";
   import Toggle from "$shared/ui/Toggle.svelte";
   import MaskedInput from "$shared/ui/MaskedInput.svelte";
+  import InfoIcon from "$shared/ui/InfoIcon.svelte";
   import { positiveLengthMask } from "$shared/utils/masks";
   import { i18n } from "$shared/i18n/index.svelte";
 
@@ -13,13 +14,19 @@
 </script>
 
 <section class="flex flex-col gap-4 p-4 min-w-0 max-w-full box-border">
-  <Toggle
-    checked={gaps.scale_with_dpi}
-    label={i18n.t.gaps.scaleWithDpi}
-    onChange={(v) => onPatch((g) => (g.scale_with_dpi = v))}
-  />
+  <div class="flex items-center gap-1.5">
+    <Toggle
+      checked={gaps.scale_with_dpi}
+      label={i18n.t.gaps.scaleWithDpi}
+      onChange={(v) => onPatch((g) => (g.scale_with_dpi = v))}
+    />
+    <InfoIcon text="Scales all gap values proportionally based on the monitor's DPI setting." />
+  </div>
 
-  <h2 class="mt-2 mb-0 text-base text-[#ccc]">{i18n.t.gaps.heading}</h2>
+  <h2 class="mt-2 mb-0 text-base text-[#ccc] inline-flex items-center gap-1.5">
+    {i18n.t.gaps.heading}
+    <InfoIcon text="Gap between adjacent windows (inner) and between windows and screen edges (outer)." />
+  </h2>
   <p class="m-0 text-[#888] text-[0.85rem]">{i18n.t.gaps.description}</p>
 
   <div class="relative mx-auto my-2 w-full max-w-[560px]">
