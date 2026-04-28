@@ -12,30 +12,9 @@
   }
   let { general, onPatch }: Props = $props();
 
-  let startupEnabled = $state(general.startup_commands.length > 0);
-  let shutdownEnabled = $state(general.shutdown_commands.length > 0);
-  let reloadEnabled = $state(general.config_reload_commands.length > 0);
-
-  // Drafts preserve commands while the section is toggled off.
-  let startupDraft = $state<string[]>([]);
-  let shutdownDraft = $state<string[]>([]);
-  let reloadDraft = $state<string[]>([]);
-
-  function toggleSection(
-    enabled: boolean,
-    draft: string[],
-    current: string[],
-    onDraft: (d: string[]) => void,
-    patch: (items: string[]) => void,
-  ) {
-    if (!enabled) {
-      onDraft([...current]);
-      patch([]);
-    } else {
-      patch(draft.length ? draft : [""]);
-      onDraft([]);
-    }
-  }
+  let startupEnabled = $state(true);
+  let shutdownEnabled = $state(true);
+  let reloadEnabled = $state(true);
 </script>
 
 <section class="tab flex flex-col gap-4 p-4 min-w-0 max-w-full box-border">
@@ -46,10 +25,7 @@
     </h2>
     <Toggle
       checked={startupEnabled}
-      onChange={(v) => {
-        startupEnabled = v;
-        toggleSection(v, startupDraft, general.startup_commands, (d) => (startupDraft = d), (items) => onPatch((g) => (g.startup_commands = items)));
-      }}
+      onChange={(v) => { startupEnabled = v; }}
     />
   </div>
   <fieldset disabled={!startupEnabled} class="border-0 p-0 m-0 {!startupEnabled ? 'opacity-40' : ''}">
@@ -66,10 +42,7 @@
     </h2>
     <Toggle
       checked={shutdownEnabled}
-      onChange={(v) => {
-        shutdownEnabled = v;
-        toggleSection(v, shutdownDraft, general.shutdown_commands, (d) => (shutdownDraft = d), (items) => onPatch((g) => (g.shutdown_commands = items)));
-      }}
+      onChange={(v) => { shutdownEnabled = v; }}
     />
   </div>
   <fieldset disabled={!shutdownEnabled} class="border-0 p-0 m-0 {!shutdownEnabled ? 'opacity-40' : ''}">
@@ -86,10 +59,7 @@
     </h2>
     <Toggle
       checked={reloadEnabled}
-      onChange={(v) => {
-        reloadEnabled = v;
-        toggleSection(v, reloadDraft, general.config_reload_commands, (d) => (reloadDraft = d), (items) => onPatch((g) => (g.config_reload_commands = items)));
-      }}
+      onChange={(v) => { reloadEnabled = v; }}
     />
   </div>
   <fieldset disabled={!reloadEnabled} class="border-0 p-0 m-0 {!reloadEnabled ? 'opacity-40' : ''}">
