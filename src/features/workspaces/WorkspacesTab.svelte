@@ -13,7 +13,7 @@
   import KbdSequence from "$shared/ui/KbdSequence.svelte";
   import InfoIcon from "$shared/ui/InfoIcon.svelte";
   import { i18n } from "$shared/i18n/index.svelte";
-  import { Plus, X, CaretUp, CaretDown } from "phosphor-svelte";
+  import { Plus, X, CaretUp, CaretDown, DotsSixVertical } from "phosphor-svelte";
 
   interface Props {
     workspaces: WorkspaceConfig[];
@@ -85,6 +85,51 @@
 
   let drafts = $state<Record<number, string>>({});
 
+  let dragIndex = $state<number | null>(null);
+  let dragOverIndex = $state<number | null>(null);
+
+  function reorder(from: number, to: number) {
+    if (from === to) return;
+    onPatchWorkspaces((ws) => {
+      const [item] = ws.splice(from, 1);
+      ws.splice(to, 0, item);
+    });
+    // Remap expanded set so the right rows stay open after reorder.
+    const next = new Set<number>();
+    for (const idx of expanded) {
+      if (idx === from) next.add(to);
+      else if (from < to && idx > from && idx <= to) next.add(idx - 1);
+      else if (from > to && idx >= to && idx < from) next.add(idx + 1);
+      else next.add(idx);
+    }
+    expanded = next;
+  }
+
+  function handleDragStart(e: DragEvent, i: number) {
+    dragIndex = i;
+    e.dataTransfer!.effectAllowed = "move";
+    const row = (e.currentTarget as HTMLElement).closest("tr");
+    if (row) e.dataTransfer!.setDragImage(row, 0, 0);
+  }
+
+  function handleDragOver(e: DragEvent, i: number) {
+    e.preventDefault();
+    e.dataTransfer!.dropEffect = "move";
+    dragOverIndex = i;
+  }
+
+  function handleDrop(e: DragEvent, i: number) {
+    e.preventDefault();
+    if (dragIndex !== null) reorder(dragIndex, i);
+    dragIndex = null;
+    dragOverIndex = null;
+  }
+
+  function handleDragEnd() {
+    dragIndex = null;
+    dragOverIndex = null;
+  }
+
   function addBinding(i: number, name: string) {
     const draft = (drafts[i] ?? "").trim();
     if (!draft) return;
@@ -109,6 +154,7 @@
   <table class="w-full border-collapse">
     <thead>
       <tr>
+        <th class="p-2 border-b border-[#333] w-6"></th>
         <th class="text-left p-2 text-[#aaa] font-medium border-b border-[#333]">
           <span class="inline-flex items-center gap-1">{i18n.t.workspaces.name} <InfoIcon text="Unique identifier for the workspace. Used in commands like 'focus --workspace 1'." /></span>
         </th>
@@ -128,7 +174,22 @@
       {#each workspaces as ws, i (i)}
         {@const bindings = getBindingsFor(ws.name)}
         {@const isExpanded = expanded.has(i)}
-        <tr>
+        <tr
+          ondragover={(e) => handleDragOver(e, i)}
+          ondrop={(e) => handleDrop(e, i)}
+          class="transition-opacity {dragIndex === i ? 'opacity-40' : ''} {dragOverIndex === i && dragIndex !== i ? 'border-t-2 border-primary' : 'border-t border-transparent'}"
+        >
+          <td class="p-[0.4rem] align-middle">
+            <div
+              role="button"
+              tabindex="-1"
+              aria-label="Drag to reorder"
+              draggable="true"
+              ondragstart={(e) => handleDragStart(e, i)}
+              ondragend={handleDragEnd}
+              class="flex items-center justify-center px-1 text-[#555] hover:text-[#999] cursor-grab active:cursor-grabbing"
+            ><DotsSixVertical size={16} /></div>
+          </td>
           <td class="p-[0.4rem] align-middle">
             <input
               type="text"
@@ -203,7 +264,7 @@
         </tr>
         {#if isExpanded}
           <tr>
-            <td colspan="5" class="bg-[#1a1a1a] p-0">
+            <td colspan="6" class="bg-[#1a1a1a] p-0">
               <div class="px-4 py-3 border-l-[3px] border-[#8eb8ed] flex flex-col gap-2">
                 <span class="text-[#aaa] text-[0.85rem]">
                   {i18n.t.workspaces.commandLabel} <code class="text-[#ddd]">focus --workspace {ws.name}</code>
