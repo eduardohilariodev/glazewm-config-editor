@@ -1,0 +1,45 @@
+name: release-please
+
+# Release Please automation.
+#
+# Cargo.toml updater note:
+#   release-please v4's `extra-files` supports a `toml` type with `jsonpath`,
+#   but in practice the most reliable approach for Cargo.toml is the
+#   "generic" updater driven by an `x-release-please-version` marker comment
+#   placed next to the `version = "..."` line. We use that approach here so
+#   that future changes to Cargo.toml structure (workspace tables, etc.) do
+#   not silently break version bumping. See `src-tauri/Cargo.toml`.
+#
+# Cross-workflow trigger note:
+#   When release-please creates a tag/release using the default `GITHUB_TOKEN`,
+#   that event will NOT trigger other workflows (e.g. a `release.yml` listening
+#   on `push: tags` or `release: published`). To enable that, create a PAT with
+#   `contents: write` + `pull-requests: write` scopes and store it as the repo
+#   secret `RELEASE_PLEASE_TOKEN`. The expression below prefers that secret and
+#   falls back to `GITHUB_TOKEN` if it is not set, so the workflow keeps
+#   working even before the secret is configured.
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run release-please
+        uses: googleapis/release-please-action@v4
+        with:
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
