@@ -1,6 +1,9 @@
 {
   "version": "5",
   "specifiers": {
+    "npm:@codemirror/lang-yaml@^6.1.3": "6.1.3",
+    "npm:@codemirror/state@^6.6.0": "6.6.0",
+    "npm:@codemirror/theme-one-dark@^6.1.3": "6.1.3",
     "npm:@sveltejs/adapter-static@*": "3.0.10_@sveltejs+kit@2.58.0__@sveltejs+vite-plugin-svelte@7.0.0___svelte@5.55.5___vite@8.0.10__svelte@5.55.5__typescript@6.0.3__vite@8.0.10_@sveltejs+vite-plugin-svelte@7.0.0__svelte@5.55.5__vite@8.0.10_typescript@6.0.3_vite@8.0.10",
     "npm:@sveltejs/adapter-static@^3.0.6": "3.0.10_@sveltejs+kit@2.58.0__@sveltejs+vite-plugin-svelte@7.0.0___svelte@5.55.5___vite@8.0.10__svelte@5.55.5__typescript@6.0.3__vite@8.0.10_@sveltejs+vite-plugin-svelte@7.0.0__svelte@5.55.5__vite@8.0.10_typescript@6.0.3_vite@8.0.10",
     "npm:@sveltejs/kit@*": "2.58.0_@sveltejs+vite-plugin-svelte@7.0.0__svelte@5.55.5__vite@8.0.10_svelte@5.55.5_typescript@6.0.3_vite@8.0.10",
@@ -16,6 +19,7 @@
     "npm:@tauri-apps/plugin-process@2": "2.3.1",
     "npm:@tauri-apps/plugin-updater@2": "2.10.1",
     "npm:@types/js-yaml@^4.0.9": "4.0.9",
+    "npm:codemirror@^6.0.2": "6.0.2",
     "npm:country-flag-icons@^1.5.13": "1.6.16",
     "npm:husky@^9.1.7": "9.1.7",
     "npm:js-yaml@^4.1.0": "4.1.1",
@@ -29,6 +33,87 @@
     "npm:vite@^8.0.10": "8.0.10"
   },
   "npm": {
+    "@codemirror/autocomplete@6.20.1": {
+      "integrity": "sha512-1cvg3Vz1dSSToCNlJfRA2WSI4ht3K+WplO0UMOgmUYPivCyy2oueZY6Lx7M9wThm7SDUBViRmuT+OG/i8+ON9A==",
+      "dependencies": [
+        "@codemirror/language",
+        "@codemirror/state",
+        "@codemirror/view",
+        "@lezer/common"
+      ]
+    },
+    "@codemirror/commands@6.10.3": {
+      "integrity": "sha512-JFRiqhKu+bvSkDLI+rUhJwSxQxYb759W5GBezE8Uc8mHLqC9aV/9aTC7yJSqCtB3F00pylrLCwnyS91Ap5ej4Q==",
+      "dependencies": [
+        "@codemirror/language",
+        "@codemirror/state",
+        "@codemirror/view",
+        "@lezer/common"
+      ]
+    },
+    "@codemirror/lang-yaml@6.1.3": {
+      "integrity": "sha512-AZ8DJBuXGVHybpBQhmZtgew5//4hv3tdkXnr3vDmOUMJRuB6vn/uuwtmTOTlqEaQFg3hQSVeA90NmvIQyUV6FQ==",
+      "dependencies": [
+        "@codemirror/autocomplete",
+        "@codemirror/language",
+        "@codemirror/state",
+        "@lezer/common",
+        "@lezer/highlight",
+        "@lezer/lr",
+        "@lezer/yaml"
+      ]
+    },
+    "@codemirror/language@6.12.3": {
+      "integrity": "sha512-QwCZW6Tt1siP37Jet9Tb02Zs81TQt6qQrZR2H+eGMcFsL1zMrk2/b9CLC7/9ieP1fjIUMgviLWMmgiHoJrj+ZA==",
+      "dependencies": [
+        "@codemirror/state",
+        "@codemirror/view",
+        "@lezer/common",
+        "@lezer/highlight",
+        "@lezer/lr",
+        "style-mod"
+      ]
+    },
+    "@codemirror/lint@6.9.5": {
+      "integrity": "sha512-GElsbU9G7QT9xXhpUg1zWGmftA/7jamh+7+ydKRuT0ORpWS3wOSP0yT1FOlIZa7mIJjpVPipErsyvVqB9cfTFA==",
+      "dependencies": [
+        "@codemirror/state",
+        "@codemirror/view",
+        "crelt"
+      ]
+    },
+    "@codemirror/search@6.7.0": {
+      "integrity": "sha512-ZvGm99wc/s2cITtMT15LFdn8aH/aS+V+DqyGq/N5ZlV5vWtH+nILvC2nw0zX7ByNoHHDZ2IxxdW38O0tc5nVHg==",
+      "dependencies": [
+        "@codemirror/state",
+        "@codemirror/view",
+        "crelt"
+      ]
+    },
+    "@codemirror/state@6.6.0": {
+      "integrity": "sha512-4nbvra5R5EtiCzr9BTHiTLc+MLXK2QGiAVYMyi8PkQd3SR+6ixar/Q/01Fa21TBIDOZXgeWV4WppsQolSreAPQ==",
+      "dependencies": [
+        "@marijn/find-cluster-break"
+      ]
+    },
+    "@codemirror/theme-one-dark@6.1.3": {
+      "integrity": "sha512-NzBdIvEJmx6fjeremiGp3t/okrLPYT0d9orIc7AFun8oZcRk58aejkqhv6spnz4MLAevrKNPMQYXEWMg4s+sKA==",
+      "dependencies": [
+        "@codemirror/language",
+        "@codemirror/state",
+        "@codemirror/view",
+        "@lezer/highlight"
+      ]
+    },
+    "@codemirror/view@6.41.1": {
+      "integrity": "sha512-ToDnWKbBnke+ZLrP6vgTTDScGi5H37YYuZGniQaBzxMVdtCxMrslsmtnOvbPZk4RX9bvkQqnWR/WS/35tJA0qg==",
+      "dependencies": [
+        "@codemirror/state",
+        "crelt",
+        "style-mod",
+        "w3c-keyname"
+      ]
+    },
     "@emnapi/core@1.10.0": {
       "integrity": "sha512-yq6OkJ4p82CAfPl0u9mQebQHKPJkY7WrIuk205cTYnYe+k2Z8YBh11FrbRG/H6ihirqcacOgl2BIO8oyMQLeXw==",
       "dependencies": [
@@ -74,6 +159,32 @@
         "@jridgewell/resolve-uri",
         "@jridgewell/sourcemap-codec"
       ]
+    },
+    "@lezer/common@1.5.2": {
+      "integrity": "sha512-sxQE460fPZyU3sdc8lafxiPwJHBzZRy/udNFynGQky1SePYBdhkBl1kOagA9uT3pxR8K09bOrmTUqA9wb/PjSQ=="
+    },
+    "@lezer/highlight@1.2.3": {
+      "integrity": "sha512-qXdH7UqTvGfdVBINrgKhDsVTJTxactNNxLk7+UMwZhU13lMHaOBlJe9Vqp907ya56Y3+ed2tlqzys7jDkTmW0g==",
+      "dependencies": [
+        "@lezer/common"
+      ]
+    },
+    "@lezer/lr@1.4.10": {
+      "integrity": "sha512-rnCpTIBafOx4mRp43xOxDJbFipJm/c0cia/V5TiGlhmMa+wsSdoGmUN3w5Bqrks/09Q/D4tNAmWaT8p6NRi77A==",
+      "dependencies": [
+        "@lezer/common"
+      ]
+    },
+    "@lezer/yaml@1.0.4": {
+      "integrity": "sha512-2lrrHqxalACEbxIbsjhqGpSW8kWpUKuY6RHgnSAFZa6qK62wvnPxA8hGOwOoDbwHcOFs5M4o27mjGu+P7TvBmw==",
+      "dependencies": [
+        "@lezer/common",
+        "@lezer/highlight",
+        "@lezer/lr"
+      ]
+    },
+    "@marijn/find-cluster-break@1.0.2": {
+      "integrity": "sha512-l0h88YhZFyKdXIFNfSWpyjStDjGHwZ/U7iobcK1cQQD8sejsONdQtTVU+1wVN1PBw40PiiHB1vA5S7VTfQiP9g=="
     },
     "@napi-rs/wasm-runtime@1.1.4_@emnapi+core@1.10.0_@emnapi+runtime@1.10.0": {
       "integrity": "sha512-3NQNNgA1YSlJb/kMH1ildASP9HW7/7kYnRI2szWJaofaS1hWmbGI4H+d3+22aGzXXN9IJ+n+GiFVcGipJP18ow==",
@@ -458,11 +569,26 @@
     "clsx@2.1.1": {
       "integrity": "sha512-eYm0QWBtUrBWZWG0d386OGAw16Z995PiOVo2B7bjWSbHedGl5e0ZWaq65kOGgUSNesEIDkB9ISbTg/JK9dhCZA=="
     },
+    "codemirror@6.0.2": {
+      "integrity": "sha512-VhydHotNW5w1UGK0Qj96BwSk/Zqbp9WbnyK2W/eVMv4QyF41INRGpjUhFJY7/uDNuudSc33a/PKr4iDqRduvHw==",
+      "dependencies": [
+        "@codemirror/autocomplete",
+        "@codemirror/commands",
+        "@codemirror/language",
+        "@codemirror/lint",
+        "@codemirror/search",
+        "@codemirror/state",
+        "@codemirror/view"
+      ]
+    },
     "cookie@0.6.0": {
       "integrity": "sha512-U71cyTamuh1CRNCfpGY6to28lxvNwPG4Guz/EVjgf3Jmzv0vlDp1atT9eS5dDjMYHucpHbWns6Lwf3BKz6svdw=="
     },
     "country-flag-icons@1.6.16": {
       "integrity": "sha512-HxJVoE/aaZGcUMx1vK/u9430uKGB3ODZDDZJJOqVJQzoHk5v42c0fSp1rk4tDfyr1dVOJjwxRiaBPliBMo2Liw=="
+    },
+    "crelt@1.0.6": {
+      "integrity": "sha512-VQ2MBenTq1fWZUH9DJNGti7kKv6EeAuYr3cLwxUWhIu1baTaXh4Ib5W2CqHVqib4/MqbYGJqiL3Zb8GJZr3l4g=="
     },
     "deepmerge@4.3.1": {
       "integrity": "sha512-3sUqbMEc77XqpdNO7FRyRog+eW3ph+GYCbj+rK+uYyRMuwsVy0rMiVtPn+QJlKFvWP/1PYpapqYn0Me2knFn+A=="
@@ -706,6 +832,9 @@
     "source-map-js@1.2.1": {
       "integrity": "sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA=="
     },
+    "style-mod@4.1.3": {
+      "integrity": "sha512-i/n8VsZydrugj3Iuzll8+x/00GH2vnYsk1eomD8QiRrSAeW6ItbCQDtfXCeJHd0iwiNagqjQkvpvREEPtW3IoQ=="
+    },
     "svelte-check@4.4.6_svelte@5.55.5_typescript@6.0.3": {
       "integrity": "sha512-kP1zG81EWaFe9ZyTv4ZXv44Csi6Pkdpb7S3oj6m+K2ec/IcDg/a8LsFsnVLqm2nxtkSwsd5xPj/qFkTBgXHXjg==",
       "dependencies": [
@@ -786,6 +915,9 @@
         "vite"
       ]
     },
+    "w3c-keyname@2.2.8": {
+      "integrity": "sha512-dpojBhNsCNN7T82Tm7k26A6G9ML3NkhDsnw9n/eoxSRlVBB4CEtIQ/KTCLI2Fwf3ataSXRhYFkQi3SlnFwPvPQ=="
+    },
     "zimmerframe@1.1.4": {
       "integrity": "sha512-B58NGBEoc8Y9MWWCQGl/gq9xBCe4IiKM0a2x7GZdQKOW5Exr8S1W24J6OgM1njK8xCRGvAJIL/MxXHf6SkmQKQ=="
     }
@@ -797,6 +929,9 @@
     ],
     "packageJson": {
       "dependencies": [
+        "npm:@codemirror/lang-yaml@^6.1.3",
+        "npm:@codemirror/state@^6.6.0",
+        "npm:@codemirror/theme-one-dark@^6.1.3",
         "npm:@sveltejs/adapter-static@^3.0.6",
         "npm:@sveltejs/kit@^2.9.0",
         "npm:@sveltejs/vite-plugin-svelte@7",
@@ -808,6 +943,7 @@
         "npm:@tauri-apps/plugin-process@2",
         "npm:@tauri-apps/plugin-updater@2",
         "npm:@types/js-yaml@^4.0.9",
+        "npm:codemirror@^6.0.2",
         "npm:country-flag-icons@^1.5.13",
         "npm:husky@^9.1.7",
         "npm:js-yaml@^4.1.0",
