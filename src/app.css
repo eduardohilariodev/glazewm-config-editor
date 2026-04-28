@@ -1,9 +1,25 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "Geist";
+  src: url("/fonts/Geist-Variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist";
+  src: url("/fonts/Geist-Italic-Variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+
 @theme {
-  --color-primary: #015f74;
-  --color-primary-hover: #0289a3;
-  --color-primary-fg: #e8f0ff;
+  --color-primary: #c2621a;
+  --color-primary-hover: #dc7a2e;
+  --color-primary-fg: #fff3e0;
   --color-tag-flash: #2ecc71;
 }
 
@@ -23,7 +39,7 @@
     margin: 0;
     background: #181818;
     color: #e8e8e8;
-    font-family: "Segoe UI", Inter, system-ui, sans-serif;
+    font-family: "Geist", "Segoe UI", Inter, system-ui, sans-serif;
     overflow: hidden;
     accent-color: var(--color-primary);
   }
