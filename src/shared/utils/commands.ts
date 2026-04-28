@@ -242,6 +242,85 @@ export function parseCommand(raw: string): ParsedCommand {
   return { ok: true, verbIdx, optionIdx, value: rest.join(" ") };
 }
 
+/**
+ * Produce a natural-language sentence describing what a command does.
+ * Falls back to the raw string for unrecognised or incomplete commands.
+ * Note: descriptions are intentionally in English — GlazeWM commands are
+ * English and the build-mode labels are English throughout.
+ */
+export function describeCommand(raw: string): string {
+  const trimmed = raw.trim();
+  if (!trimmed) return "(empty command)";
+
+  const parsed = parseCommand(trimmed);
+  if (!parsed.ok) return trimmed;
+
+  const verb = VERBS[parsed.verbIdx];
+  const option = verb.options[parsed.optionIdx];
+  const v = parsed.value;
+
+  // Value required but absent — incomplete command; show raw.
+  if (option.value !== "none" && !v.trim()) return trimmed;
+
+  switch (verb.name) {
+    case "focus":
+      if (option.flag === "--workspace")            return `Focus window on workspace ${v}`;
+      if (option.flag === "--direction")            return `Focus window ${v}`;
+      if (option.flag === "--next-workspace")       return "Focus the next workspace";
+      if (option.flag === "--prev-workspace")       return "Focus the previous workspace";
+      if (option.flag === "--recent-workspace")     return "Focus the most recent workspace";
+      if (option.flag === "--next-active-workspace") return "Focus the next active workspace";
+      if (option.flag === "--prev-active-workspace") return "Focus the previous active workspace";
+      break;
+    case "wm-cycle-focus":   return "Cycle window focus";
+    case "move":
+      if (option.flag === "--workspace")  return `Move window to workspace ${v}`;
+      if (option.flag === "--direction")  return `Move window ${v}`;
+      break;
+    case "resize":
+      if (option.flag === "--width")   return `Resize window width to ${v}`;
+      if (option.flag === "--height")  return `Resize window height to ${v}`;
+      break;
+    case "set-floating":
+      return option.flag === "--centered"
+        ? "Set window to floating (centered)"
+        : "Set window to floating";
+    case "set-fullscreen":
+      return option.flag === "--maximized"
+        ? "Set window to fullscreen (maximized)"
+        : "Set window to fullscreen";
+    case "set-minimized":        return "Minimize window";
+    case "set-tiling":           return "Set window to tiling";
+    case "toggle-floating":
+      return option.flag === "--centered"
+        ? "Toggle floating (centered)"
+        : "Toggle floating";
+    case "toggle-fullscreen":
+      return option.flag === "--maximized"
+        ? "Toggle fullscreen (maximized)"
+        : "Toggle fullscreen";
+    case "toggle-minimized":          return "Toggle minimized";
+    case "toggle-tiling":             return "Toggle tiling";
+    case "tiling-direction":          return `Set tiling direction to ${v}`;
+    case "toggle-tiling-direction":   return "Toggle tiling direction";
+    case "close":                     return "Close window";
+    case "ignore":                    return "Ignore window";
+    case "wm-reload-config":          return "Reload GlazeWM config";
+    case "wm-redraw":                 return "Redraw all windows";
+    case "wm-toggle-pause":           return "Toggle GlazeWM pause";
+    case "wm-enable-binding-mode":    return `Enable binding mode "${v}"`;
+    case "wm-disable-binding-mode":   return `Disable binding mode "${v}"`;
+    case "wm-exit":                   return "Exit GlazeWM";
+    case "shell-exec":                return `Run: ${v}`;
+  }
+
+  // Generic fallback via semantic label.
+  const label = semanticLabel(raw);
+  return label.ok
+    ? (label.secondary ? `${label.primary} ${label.secondary}` : label.primary)
+    : raw;
+}
+
 export interface SemanticLabel {
   /** Human-readable action label, e.g. "Set Floating", "Move Window". */
   primary: string;
