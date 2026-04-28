@@ -11,7 +11,10 @@
     "npm:@tauri-apps/cli@2": "2.10.1",
     "npm:@tauri-apps/plugin-dialog@2": "2.7.0",
     "npm:@tauri-apps/plugin-fs@2": "2.5.0",
+    "npm:@tauri-apps/plugin-process@2": "2.3.1",
+    "npm:@tauri-apps/plugin-updater@2": "2.10.1",
     "npm:@types/js-yaml@^4.0.9": "4.0.9",
+    "npm:husky@^9.1.7": "9.1.7",
     "npm:js-yaml@^4.1.0": "4.1.1",
     "npm:phosphor-svelte@^3.1.0": "3.1.0_svelte@5.55.5_vite@6.4.2",
     "npm:svelte-check@*": "4.4.6_svelte@5.55.5_typescript@5.6.3",
@@ -554,6 +557,18 @@
         "@tauri-apps/api"
       ]
     },
+    "@tauri-apps/plugin-process@2.3.1": {
+      "integrity": "sha512-nCa4fGVaDL/B9ai03VyPOjfAHRHSBz5v6F/ObsB73r/dA3MHHhZtldaDMIc0V/pnUw9ehzr2iEG+XkSEyC0JJA==",
+      "dependencies": [
+        "@tauri-apps/api"
+      ]
+    },
+    "@tauri-apps/plugin-updater@2.10.1": {
+      "integrity": "sha512-NFYMg+tWOZPJdzE/PpFj2qfqwAWwNS3kXrb1tm1gnBJ9mYzZ4WDRrwy8udzWoAnfGCHLuePNLY1WVCNHnh3eRA==",
+      "dependencies": [
+        "@tauri-apps/api"
+      ]
+    },
     "@types/cookie@0.6.0": {
       "integrity": "sha512-4Kh9a6B2bQciAhf7FSuMRRkUWecJgJu9nPnx3yzpsfXX/c50REIqpHY4C82bXP90qrLtXtkDxTZosYO3UpOwlA=="
     },
@@ -677,6 +692,10 @@
     },
     "graceful-fs@4.2.11": {
       "integrity": "sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ=="
+    },
+    "husky@9.1.7": {
+      "integrity": "sha512-5gs5ytaNjBrh5Ow3zrvdUUY+0VxIuWVL4i9irt6friV+BqdCfmV11CQTWMiBYWHbXhco+J1kHfTOUkePhCDvMA==",
+      "bin": true
     },
     "is-reference@3.0.3": {
       "integrity": "sha512-ixkJoqQvAP88E6wLydLGGqCJsrFUnqoH6HnaczB8XmDH1oaWU+xxdptvikTgaEhtZ53Ky6YXiBuUI2WXLMCwjw==",
@@ -971,7 +990,10 @@
         "npm:@tauri-apps/cli@2",
         "npm:@tauri-apps/plugin-dialog@2",
         "npm:@tauri-apps/plugin-fs@2",
+        "npm:@tauri-apps/plugin-process@2",
+        "npm:@tauri-apps/plugin-updater@2",
         "npm:@types/js-yaml@^4.0.9",
+        "npm:husky@^9.1.7",
         "npm:js-yaml@^4.1.0",
         "npm:phosphor-svelte@^3.1.0",
         "npm:svelte-check@4",
