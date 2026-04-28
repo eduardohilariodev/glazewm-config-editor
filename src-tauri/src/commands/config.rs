@@ -51,7 +51,9 @@ pub fn path_exists(path: String) -> bool {
 /// `Ok(())` on success, `Err(<message>)` on failure.
 #[tauri::command]
 pub fn validate_regex(pattern: String) -> Result<(), String> {
-    regex::Regex::new(&pattern).map(|_| ()).map_err(|e| e.to_string())
+    regex::Regex::new(&pattern)
+        .map(|_| ())
+        .map_err(|e| e.to_string())
 }
 
 /// Asks a running GlazeWM instance to reload its config via the bundled CLI:
