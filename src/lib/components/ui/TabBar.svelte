@@ -1,10 +1,11 @@
 <script lang="ts">
   import type { Component } from "svelte";
+  import type { IconWeight } from "phosphor-svelte";
 
   interface Tab {
     id: string;
     label: string;
-    icon?: Component<{ size?: number | string; weight?: string }>;
+    icon?: Component<{ size?: number | string; weight?: IconWeight }>;
   }
   interface Props {
     tabs: Tab[];
