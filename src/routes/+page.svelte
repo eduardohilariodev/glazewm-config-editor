@@ -32,6 +32,10 @@
     ArrowUUpLeft,
     ArrowUUpRight,
     ClockCounterClockwise,
+    FolderOpen,
+    FloppyDisk,
+    FloppyDiskBack,
+    ArrowsClockwise,
   } from "phosphor-svelte";
 
   const tabs = [
@@ -170,8 +174,9 @@
   $effect(() => {
     const base = "GlazeWM Config Editor";
     const path = store.configPath;
+    const filename = path ? (path.split(/[\\/]/).pop() ?? path) : "";
     const dirty = store.isDirty ? " ●" : "";
-    setWindowTitle(path ? `${base} — ${path}${dirty}` : base);
+    setWindowTitle(filename ? `${base} — ${filename}${dirty}` : base);
   });
 
   // Poll for external file changes every 2s while a config is loaded.
@@ -200,30 +205,30 @@
     <div class="flex gap-[0.4rem] items-center">
       <button
         type="button"
-        class="px-[0.8rem] py-[0.4rem] border border-[#444] rounded bg-[#2a2a2a] text-inherit cursor-pointer font-[inherit] enabled:hover:bg-[#3a3a3a] disabled:opacity-40 disabled:cursor-not-allowed"
+        class="inline-flex items-center gap-1.5 px-[0.8rem] py-[0.4rem] border border-[#444] rounded bg-[#2a2a2a] text-inherit cursor-pointer font-[inherit] enabled:hover:bg-[#3a3a3a] disabled:opacity-40 disabled:cursor-not-allowed"
         onclick={openFile}
-      >Open…</button>
+      ><FolderOpen size={16} />Open…</button>
       <button
         type="button"
-        class="px-[0.8rem] py-[0.4rem] border border-[#444] rounded bg-[#2a2a2a] text-inherit cursor-pointer font-[inherit] enabled:hover:bg-[#3a3a3a] disabled:opacity-40 disabled:cursor-not-allowed"
+        class="inline-flex items-center gap-1.5 px-[0.8rem] py-[0.4rem] border border-[#444] rounded bg-[#2a2a2a] text-inherit cursor-pointer font-[inherit] enabled:hover:bg-[#3a3a3a] disabled:opacity-40 disabled:cursor-not-allowed"
         onclick={saveFile}
         disabled={!store.config}
       >
-        Save{store.isDirty ? " *" : ""}
+        <FloppyDisk size={16} />Save{store.isDirty ? " *" : ""}
       </button>
       <button
         type="button"
-        class="px-[0.8rem] py-[0.4rem] border border-[#444] rounded bg-[#2a2a2a] text-inherit cursor-pointer font-[inherit] enabled:hover:bg-[#3a3a3a] disabled:opacity-40 disabled:cursor-not-allowed"
+        class="inline-flex items-center gap-1.5 px-[0.8rem] py-[0.4rem] border border-[#444] rounded bg-[#2a2a2a] text-inherit cursor-pointer font-[inherit] enabled:hover:bg-[#3a3a3a] disabled:opacity-40 disabled:cursor-not-allowed"
         onclick={saveAs}
         disabled={!store.config}
-      >Save As…</button>
+      ><FloppyDiskBack size={16} />Save As…</button>
       <button
         type="button"
-        class="px-[0.8rem] py-[0.4rem] border border-[#3a6aa0] rounded bg-[#2d4f7a] text-inherit cursor-pointer font-[inherit] enabled:hover:bg-[#3a6aa0] disabled:opacity-40 disabled:cursor-not-allowed"
+        class="inline-flex items-center gap-1.5 px-[0.8rem] py-[0.4rem] border border-[#3a6aa0] rounded bg-[#2d4f7a] text-inherit cursor-pointer font-[inherit] enabled:hover:bg-[#3a6aa0] disabled:opacity-40 disabled:cursor-not-allowed"
         onclick={saveAndReload}
         disabled={!store.config}
       >
-        Save &amp; Reload
+        <ArrowsClockwise size={16} />Save &amp; Reload
       </button>
     </div>
     <div class="relative flex gap-[0.4rem] items-center">
