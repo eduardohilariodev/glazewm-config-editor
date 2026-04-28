@@ -1,0 +1,192 @@
+# Scoop bucket update workflow
+#
+# Required repository secrets:
+#   SCOOP_BUCKET_REPO  - The owner/repo of the Scoop bucket repository
+#                        (e.g. "eduardohilariodev/scoop-bucket").
+#   SCOOP_BUCKET_TOKEN - A Personal Access Token (classic or fine-grained)
+#                        with write (contents) access to SCOOP_BUCKET_REPO.
+#
+# Triggers:
+#   - Automatically when a GitHub Release is published in this repo.
+#   - Manually via workflow_dispatch with a `tag` input (e.g. v1.2.3).
+
+name: Scoop Bucket Update
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to publish to the Scoop bucket (e.g. v1.2.3)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  update-bucket:
+    name: Update Scoop manifest
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve tag and version
+        id: resolve
+        env:
+          EVENT_TAG: ${{ github.event.release.tag_name }}
+          INPUT_TAG: ${{ github.event.inputs.tag }}
+        run: |
+          set -euo pipefail
+          TAG="${EVENT_TAG:-$INPUT_TAG}"
+          if [ -z "$TAG" ]; then
+            echo "::error::No tag could be resolved from event.release.tag_name or workflow_dispatch input."
+            exit 1
+          fi
+          VERSION="${TAG#v}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Resolved tag=$TAG version=$VERSION"
+
+      - name: Download Windows installer asset from release
+        id: asset
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.resolve.outputs.tag }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          echo "Fetching release metadata for $REPO@$TAG"
+          API_URL="https://api.github.com/repos/$REPO/releases/tags/$TAG"
+          RELEASE_JSON=$(curl -fsSL \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "$API_URL")
+
+          # Prefer .msi (x64), fallback to .exe
+          ASSET_URL=$(echo "$RELEASE_JSON" | jq -r '
+            [.assets[] | select(.name | test("(?i)(x64|x86_64|amd64).*\\.msi$"))] as $msi64
+            | [.assets[] | select(.name | test("(?i)\\.msi$"))] as $msi
+            | [.assets[] | select(.name | test("(?i)(x64|x86_64|amd64).*setup.*\\.exe$"))] as $exe64
+            | [.assets[] | select(.name | test("(?i)\\.exe$"))] as $exe
+            | ($msi64 + $msi + $exe64 + $exe)[0].browser_download_url // empty
+          ')
+          ASSET_NAME=$(echo "$RELEASE_JSON" | jq -r '
+            [.assets[] | select(.name | test("(?i)(x64|x86_64|amd64).*\\.msi$"))] as $msi64
+            | [.assets[] | select(.name | test("(?i)\\.msi$"))] as $msi
+            | [.assets[] | select(.name | test("(?i)(x64|x86_64|amd64).*setup.*\\.exe$"))] as $exe64
+            | [.assets[] | select(.name | test("(?i)\\.exe$"))] as $exe
+            | ($msi64 + $msi + $exe64 + $exe)[0].name // empty
+          ')
+
+          if [ -z "$ASSET_URL" ] || [ "$ASSET_URL" = "null" ]; then
+            echo "::error::Could not locate a Windows .msi or .exe installer asset on release $TAG."
+            echo "Available assets:"
+            echo "$RELEASE_JSON" | jq -r '.assets[].name'
+            exit 1
+          fi
+
+          echo "Selected asset: $ASSET_NAME"
+          echo "Asset URL: $ASSET_URL"
+          curl -fsSL -o "dist/$ASSET_NAME" "$ASSET_URL"
+
+          HASH=$(sha256sum "dist/$ASSET_NAME" | awk '{print $1}')
+          echo "SHA256: $HASH"
+
+          echo "asset_name=$ASSET_NAME" >> "$GITHUB_OUTPUT"
+          echo "asset_url=$ASSET_URL" >> "$GITHUB_OUTPUT"
+          echo "asset_hash=$HASH" >> "$GITHUB_OUTPUT"
+
+      - name: Validate Scoop bucket secrets
+        env:
+          SCOOP_BUCKET_REPO: ${{ secrets.SCOOP_BUCKET_REPO }}
+          SCOOP_BUCKET_TOKEN: ${{ secrets.SCOOP_BUCKET_TOKEN }}
+        run: |
+          set -e
+          if [ -z "${SCOOP_BUCKET_REPO}" ]; then
+            echo "::error::Missing required secret SCOOP_BUCKET_REPO (e.g. owner/scoop-bucket)."
+            exit 1
+          fi
+          if [ -z "${SCOOP_BUCKET_TOKEN}" ]; then
+            echo "::error::Missing required secret SCOOP_BUCKET_TOKEN (PAT with write access)."
+            exit 1
+          fi
+
+      - name: Checkout Scoop bucket repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ secrets.SCOOP_BUCKET_REPO }}
+          token: ${{ secrets.SCOOP_BUCKET_TOKEN }}
+          path: scoop-bucket
+
+      - name: Update Scoop manifest
+        env:
+          VERSION: ${{ steps.resolve.outputs.version }}
+          ASSET_URL: ${{ steps.asset.outputs.asset_url }}
+          ASSET_HASH: ${{ steps.asset.outputs.asset_hash }}
+          ASSET_NAME: ${{ steps.asset.outputs.asset_name }}
+          SOURCE_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          cd scoop-bucket
+          mkdir -p bucket
+          MANIFEST="bucket/glazewm-config-editor.json"
+
+          BIN_NAME="glazewm-config-editor.exe"
+          case "$ASSET_NAME" in
+            *.msi) INSTALLER_TYPE="msi" ;;
+            *.exe) INSTALLER_TYPE="exe" ;;
+            *)     INSTALLER_TYPE="exe" ;;
+          esac
+
+          jq -n \
+            --arg version "$VERSION" \
+            --arg url "$ASSET_URL" \
+            --arg hash "$ASSET_HASH" \
+            --arg bin "$BIN_NAME" \
+            --arg homepage "https://github.com/$SOURCE_REPO" \
+            --arg checkurl "https://github.com/$SOURCE_REPO/releases/latest" \
+            --arg autourl "https://github.com/$SOURCE_REPO/releases/download/v\$version/$(echo "$ASSET_NAME" | sed "s/$VERSION/\$version/g")" \
+            '{
+              version: $version,
+              description: "GlazeWM Config Editor - a desktop GUI for editing GlazeWM configuration.",
+              homepage: $homepage,
+              license: "MIT",
+              architecture: {
+                "64bit": {
+                  url: $url,
+                  hash: $hash
+                }
+              },
+              bin: $bin,
+              checkver: {
+                url: $checkurl,
+                regex: "tag/v([\\d.]+)"
+              },
+              autoupdate: {
+                architecture: {
+                  "64bit": {
+                    url: $autourl
+                  }
+                }
+              }
+            }' > "$MANIFEST"
+
+          echo "Updated manifest:"
+          cat "$MANIFEST"
+
+      - name: Commit and push manifest update
+        env:
+          VERSION: ${{ steps.resolve.outputs.version }}
+        run: |
+          set -euo pipefail
+          cd scoop-bucket
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add bucket/glazewm-config-editor.json
+          if git diff --cached --quiet; then
+            echo "No manifest changes to commit."
+            exit 0
+          fi
+          git commit -m "chore: update glazewm-config-editor to v${VERSION}"
+          git push
