@@ -19,9 +19,16 @@ if (-not (Test-Path $vsDevShell)) {
 
 Set-Location -Path $PSScriptRoot
 
-# 3. Build (forward any extra args, e.g. --debug)
+# 3. Resolve deno by full path to avoid stale command-lookup cache
+$deno = (Get-Command deno -ErrorAction SilentlyContinue)?.Source
+if (-not $deno) {
+    Write-Error "deno not found on PATH. Install deno and try again: https://deno.com"
+    exit 1
+}
+
+# 4. Build (forward any extra args, e.g. --debug)
 Write-Host "==> Building GlazeWM Editor..." -ForegroundColor Cyan
-& deno task tauri build @args
+& $deno task tauri build @args
 if ($LASTEXITCODE -ne 0) {
     Write-Error "tauri build failed with exit code $LASTEXITCODE"
     exit $LASTEXITCODE
