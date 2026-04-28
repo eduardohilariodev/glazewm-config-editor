@@ -242,6 +242,48 @@ export function parseCommand(raw: string): ParsedCommand {
   return { ok: true, verbIdx, optionIdx, value: rest.join(" ") };
 }
 
+export interface SemanticLabel {
+  /** Human-readable action label, e.g. "Set Floating", "Move Window". */
+  primary: string;
+  /** Qualifier or target, e.g. "centered", "1" (workspace), "notepad.exe". */
+  secondary?: string;
+  /** False when the command is empty, unrecognized, or structurally incomplete. */
+  ok: boolean;
+}
+
+/**
+ * Convert a raw command string into a display-friendly semantic label.
+ * When `ok` is false, `primary` contains the raw string for verbatim display.
+ */
+export function semanticLabel(raw: string): SemanticLabel {
+  const trimmed = raw.trim();
+  if (!trimmed) return { ok: false, primary: "(empty)" };
+
+  const parsed = parseCommand(trimmed);
+  if (!parsed.ok) return { ok: false, primary: trimmed };
+
+  const verb = VERBS[parsed.verbIdx];
+  const option = verb.options[parsed.optionIdx];
+  const verbLabel = verb.label ?? verb.name;
+
+  // Option requires a value but none is present — incomplete command.
+  if (option.value !== "none" && !parsed.value.trim()) {
+    return { ok: false, primary: trimmed };
+  }
+
+  // Pure-flag options (e.g. --centered, --next-workspace): show flag as secondary.
+  if (option.value === "none" && option.flag) {
+    const flagLabel = option.friendlyLabel ?? option.flag.replace(/^--/, "");
+    return { ok: true, primary: verbLabel, secondary: flagLabel };
+  }
+
+  if (parsed.value) {
+    return { ok: true, primary: verbLabel, secondary: parsed.value };
+  }
+
+  return { ok: true, primary: verbLabel };
+}
+
 /** Build a command string from (verb, option, value). */
 export function buildCommand(verbIdx: number, optionIdx: number, value: string): string {
   const verb = VERBS[verbIdx];
