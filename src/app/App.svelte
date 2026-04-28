@@ -16,6 +16,7 @@
     getMtime,
   } from "$shared/tauri";
   import Toggle from "$shared/ui/Toggle.svelte";
+  import InfoIcon from "$shared/ui/InfoIcon.svelte";
   import TabBar from "$shared/ui/TabBar.svelte";
   import MenuBar from "$shared/ui/MenuBar.svelte";
   import GeneralTab from "$features/general";
@@ -91,6 +92,24 @@
     else if (k === "s" && !e.shiftKey) { e.preventDefault(); saveFile(); }
     else if (k === "s" && e.shiftKey) { e.preventDefault(); saveAs(); }
     else if (k === "r" && !e.shiftKey) { e.preventDefault(); saveAndReload(); }
+  }
+
+  function isEditableEl(el: Element | null): boolean {
+    if (!el) return false;
+    const tag = el.tagName.toLowerCase();
+    return (
+      tag === "input" ||
+      tag === "textarea" ||
+      tag === "select" ||
+      (el as HTMLElement).isContentEditable
+    );
+  }
+
+  function onDocumentFocusOut(e: FocusEvent) {
+    if (!settings.liveMode || !store.isDirty || !store.config) return;
+    if (!isEditableEl(e.target as Element)) return;
+    if (isEditableEl(e.relatedTarget as Element)) return;
+    saveAndReload();
   }
 
   async function tryLoadDefault() {
@@ -202,6 +221,7 @@
 </script>
 
 <svelte:window onkeydown={onKeydown} />
+<svelte:document onfocusout={onDocumentFocusOut} />
 
 <main class="grid grid-rows-[auto_auto_1fr_auto] h-screen w-full overflow-hidden min-w-0">
   <header class="flex items-center justify-between px-3 py-2 bg-[#1e1e1e] border-b border-[#333] gap-4">
@@ -257,6 +277,14 @@
       {/if}
     </div>
     <div class="flex gap-[0.4rem] items-center">
+      <span class="inline-flex items-center gap-1.5">
+        <InfoIcon text={i18n.t.app.liveModeTooltip} />
+        <Toggle
+          checked={settings.liveMode}
+          label={i18n.t.app.liveMode}
+          onChange={(v) => (settings.liveMode = v)}
+        />
+      </span>
       <Toggle
         checked={settings.advancedMode}
         label="Advanced mode"

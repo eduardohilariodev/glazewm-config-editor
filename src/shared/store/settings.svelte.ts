@@ -12,12 +12,15 @@ class SettingsStore {
   autoSortRawAlternatives = $state(true);
   /** Show raw command/option names instead of human-readable labels. */
   advancedMode = $state(false);
+  /** Auto-save and reload GlazeWM whenever an input field loses focus. */
+  liveMode = $state(false);
 
   toJSON() {
     return {
       autoSortTags: this.autoSortTags,
       autoSortRawAlternatives: this.autoSortRawAlternatives,
       advancedMode: this.advancedMode,
+      liveMode: this.liveMode,
     };
   }
 
@@ -28,6 +31,7 @@ class SettingsStore {
     if (typeof r.autoSortRawAlternatives === "boolean")
       this.autoSortRawAlternatives = r.autoSortRawAlternatives;
     if (typeof r.advancedMode === "boolean") this.advancedMode = r.advancedMode;
+    if (typeof r.liveMode === "boolean") this.liveMode = r.liveMode;
   }
 }
 
