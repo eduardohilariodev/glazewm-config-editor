@@ -4,6 +4,9 @@
 
 $ErrorActionPreference = "Stop"
 
+# VS Code JS debugger injects --require bootloader into NODE_OPTIONS; Deno crashes on it
+Remove-Item Env:NODE_OPTIONS -ErrorAction SilentlyContinue
+
 # 1. Ensure cargo + deno + scoop shims are on PATH (User PATH may not be in this session)
 $userPath = [System.Environment]::GetEnvironmentVariable("Path", "User")
 $machinePath = [System.Environment]::GetEnvironmentVariable("Path", "Machine")
@@ -17,7 +20,8 @@ if (-not (Test-Path $vsDevShell)) {
 }
 & $vsDevShell -Arch amd64 -HostArch amd64 -SkipAutomaticLocation | Out-Null
 
-Set-Location -Path $PSScriptRoot
+$projectRoot = Split-Path $PSScriptRoot -Parent
+Set-Location -Path $projectRoot
 
 # 3. Resolve deno by full path to avoid stale command-lookup cache
 $deno = (Get-Command deno -ErrorAction SilentlyContinue)?.Source
@@ -35,7 +39,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 # 4. Report artifacts
-$releaseDir = Join-Path $PSScriptRoot "src-tauri\target\release"
+$releaseDir = Join-Path $projectRoot "src-tauri\target\release"
 $exe = Join-Path $releaseDir "glazewm-editor.exe"
 $bundleDir = Join-Path $releaseDir "bundle"
 
