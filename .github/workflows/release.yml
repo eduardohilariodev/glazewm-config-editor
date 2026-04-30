@@ -112,6 +112,7 @@ jobs:
           gh release upload $tag $zipName --clobber
 
 
+  publish-release:
     name: Publish release
     needs: build
     runs-on: ubuntu-latest
