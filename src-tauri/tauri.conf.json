@@ -58,7 +58,7 @@
       "icons/icon.png"
     ],
     "macOS": {
-      "signingIdentity": null,
+      "signingIdentity": "-",
       "entitlements": "./Entitlements.plist",
       "minimumSystemVersion": "11.0",
       "dmg": {
