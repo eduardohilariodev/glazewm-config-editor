@@ -38,27 +38,27 @@
 
 ---
 
-## Table of Contents
+## 📋 Table of Contents
 
-- [Why this editor?](#why-this-editor)
-- [Download](#️-download)
-- [Features](#features)
-- [Screenshots](#screenshots)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Tech Stack](#tech-stack)
-- [Development](#development)
-- [Project Structure](#project-structure)
-- [Roadmap](#roadmap)
-- [FAQ](#faq)
-- [Contributing](#contributing)
-- [Security](#security)
-- [License](#license)
-- [Acknowledgements](#acknowledgements)
+- [💡 Why this editor?](#-why-this-editor)
+- [⬇️ Download](#️-download)
+- [✨ Features](#-features)
+- [📸 Screenshots](#-screenshots)
+- [📦 Installation](#-installation)
+- [🚀 Usage](#-usage)
+- [🛠️ Tech Stack](#️-tech-stack)
+- [🧑‍💻 Development](#-development)
+- [🗂️ Project Structure](#️-project-structure)
+- [🗺️ Roadmap](#️-roadmap)
+- [❓ FAQ](#-faq)
+- [🤝 Contributing](#-contributing)
+- [🔒 Security](#-security)
+- [📄 License](#-license)
+- [🙏 Acknowledgements](#-acknowledgements)
 
 ---
 
-## Why this editor?
+## 💡 Why this editor?
 
 GlazeWM is configured entirely through a YAML file. That's powerful — but it
 also means you need to know the exact key names, allowed values, and nesting
@@ -96,7 +96,7 @@ save.
 
 ---
 
-## Features
+## ✨ Features
 
 | Feature | Details |
 |---------|---------|
@@ -117,7 +117,7 @@ save.
 
 ---
 
-## Screenshots
+## 📸 Screenshots
 
 > No screenshots have been captured yet.
 > To contribute: run `deno task tauri dev`, resize the window to 1280 × 800 px,
@@ -154,23 +154,23 @@ save.
 
 ---
 
-## Installation
+## 📦 Installation
 
-### Scoop (recommended for Windows)
+### 🧹 Scoop (recommended for Windows)
 
 ```powershell
 scoop bucket add glazewm-config-editor https://github.com/eduardohilariodev/scoop-glazewm-config-editor
 scoop install glazewm-config-editor
 ```
 
-### Winget
+### 🪟 Winget
 
 ```powershell
 # Coming soon
 winget install eduardohilariodev.GlazeWMConfigEditor
 ```
 
-### Manual
+### 📥 Manual
 
 Download the latest installer from the
 [Releases page](https://github.com/eduardohilariodev/glazewm-config-editor/releases/latest)
@@ -179,7 +179,7 @@ use whichever fits your deployment. macOS ships as a `.dmg` disk image.
 
 ---
 
-## Usage
+## 🚀 Usage
 
 1. **Launch** GlazeWM Config Editor from the Start menu or Applications folder.
 2. **Open your config file** — the default path is:
@@ -191,7 +191,7 @@ GlazeWM picks up changes the next time it reloads its configuration.
 
 ---
 
-## Tech Stack
+## 🛠️ Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
@@ -204,9 +204,9 @@ GlazeWM picks up changes the next time it reloads its configuration.
 
 ---
 
-## Development
+## 🧑‍💻 Development
 
-### Prerequisites
+### 📋 Prerequisites
 
 | Tool | Minimum version | Install |
 |------|----------------|---------|
@@ -219,14 +219,14 @@ GlazeWM picks up changes the next time it reloads its configuration.
 > and [WebView2](https://developer.microsoft.com/en-us/microsoft-edge/webview2/)
 > (pre-installed on Windows 10/11).
 
-### Setup
+### ⚙️ Setup
 
 ```powershell
 # Install dependencies (including git hooks via Husky)
 deno install --allow-scripts=npm:husky
 ```
 
-### Common tasks
+### 🔧 Common tasks
 
 ```powershell
 deno task tauri dev      # Run the desktop app in watch/dev mode
@@ -246,7 +246,7 @@ cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
 Or via VS Code: **Terminal → Run Task** (`dev` / `build`), or
 **Ctrl+Shift+B** for build.
 
-### Running tests
+### 🧪 Running tests
 
 No automated test suite exists yet. Contributions that add tests are welcome.
 
@@ -256,7 +256,7 @@ No automated test suite exists yet. Contributions that add tests are welcome.
 
 ---
 
-## Project Structure
+## 🗂️ Project Structure
 
 ```
 .
@@ -303,19 +303,19 @@ No automated test suite exists yet. Contributions that add tests are welcome.
 
 ---
 
-## Roadmap
+## 🗺️ Roadmap
 
-- [ ] Winget publish (`winget install eduardohilariodev.GlazeWMConfigEditor`)
-- [ ] Linux support (once GlazeWM supports Linux)
-- [ ] Config diff viewer (before/after on save)
-- [ ] Multiple config profile support
-- [ ] Automated test suite (Vitest + Rust unit tests)
+- [ ] 🪟 Winget publish (`winget install eduardohilariodev.GlazeWMConfigEditor`)
+- [ ] 🐧 Linux support (once GlazeWM supports Linux)
+- [ ] 🔍 Config diff viewer (before/after on save)
+- [ ] 📁 Multiple config profile support
+- [ ] 🧪 Automated test suite (Vitest + Rust unit tests)
 
 > Have a feature request? [Open an issue](https://github.com/eduardohilariodev/glazewm-config-editor/issues/new?template=feature_request.md).
 
 ---
 
-## FAQ
+## ❓ FAQ
 
 **Q: Does this modify GlazeWM itself?**  
 No. The editor only reads and writes your `config.yaml`. GlazeWM must be
@@ -346,7 +346,7 @@ install experience.
 
 ---
 
-## Contributing
+## 🤝 Contributing
 
 Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md)
 before opening a pull request.
@@ -360,19 +360,19 @@ Key points:
 
 ---
 
-## Security
+## 🔒 Security
 
 To report a vulnerability, follow the process in [SECURITY.md](SECURITY.md).
 
 ---
 
-## License
+## 📄 License
 
 Released under the [MIT License](LICENSE).
 
 ---
 
-## Acknowledgements
+## 🙏 Acknowledgements
 
 - [GlazeWM](https://github.com/glzr-io/glazewm) — the tiling window manager this editor targets.
 - [Tauri](https://tauri.app/) — the desktop application framework.
