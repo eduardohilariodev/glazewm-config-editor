@@ -116,17 +116,16 @@ jobs:
     name: Publish release
     needs: build
     runs-on: ubuntu-latest
-    # Only auto-publish on the release event (not workflow_dispatch reruns)
-    if: github.event_name == 'release'
     steps:
       - name: Publish draft release
         uses: actions/github-script@v7
         with:
           script: |
+            const releaseId = context.payload.release?.id ?? Number(context.payload.inputs.release_id);
             await github.rest.repos.updateRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              release_id: context.payload.release.id,
+              release_id: releaseId,
               draft: false,
             })
 
