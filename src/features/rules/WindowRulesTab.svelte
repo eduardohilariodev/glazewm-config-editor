@@ -29,6 +29,21 @@
   let filter = $state("");
   let q = $derived(filter.trim().toLowerCase());
   setContext("filter:q", () => q);
+
+  function highlightSegments(text: string): Array<{ t: string; mark: boolean }> {
+    if (!q) return [{ t: text, mark: false }];
+    const out: Array<{ t: string; mark: boolean }> = [];
+    const lower = text.toLowerCase();
+    let i = 0;
+    while (i < text.length) {
+      const idx = lower.indexOf(q, i);
+      if (idx === -1) { out.push({ t: text.slice(i), mark: false }); break; }
+      if (idx > i) out.push({ t: text.slice(i, idx), mark: false });
+      out.push({ t: text.slice(idx, idx + q.length), mark: true });
+      i = idx + q.length;
+    }
+    return out;
+  }
   function matches(rule: WindowRuleConfig): boolean {
     if (!q) return true;
     const parts: string[] = [...rule.commands];
@@ -482,7 +497,7 @@
           {:else}
             <ul class="m-0 p-0 list-none flex flex-col gap-[0.2rem]">
               {#each rule.commands as cmd (cmd)}
-                <li class="text-[0.85rem] pl-1 before:content-['→'] before:text-[#555] before:mr-2"><code class="px-[0.35rem] py-[0.1rem] rounded bg-[#1a1a1a] border border-[#2d2d2d] font-mono text-[0.82rem] text-[#ddd]">{describeCommand(cmd)}</code></li>
+                <li class="text-[0.85rem] pl-1 before:content-['→'] before:text-[#555] before:mr-2"><code class="px-[0.35rem] py-[0.1rem] rounded bg-[#1a1a1a] border border-[#2d2d2d] font-mono text-[0.82rem] text-[#ddd]">{#each highlightSegments(describeCommand(cmd)) as s}{#if s.mark}<mark class="bg-[#ffd97a] text-black rounded-[2px] px-[1px]">{s.t}</mark>{:else}{s.t}{/if}{/each}</code></li>
               {/each}
             </ul>
           {/if}
@@ -517,11 +532,12 @@
                     {#if tagDecode?.ok}
                       <span class="inline-flex flex-wrap gap-[0.3rem]">
                         {#each tagDecode.tags as tag (tag)}
-                          <span class="inline-flex items-center px-[0.35rem] py-[0.1rem] rounded-[3px] bg-[#015f74] text-[#e8f0ff] font-mono text-[0.8rem]">{tag}</span>
+                          {@const tagMatches = !!q && tag.toLowerCase().includes(q)}
+                          <span class="inline-block px-[0.35rem] py-[0.1rem] rounded-[3px] bg-[#015f74] text-[#e8f0ff] font-mono text-[0.8rem] {tagMatches ? 'ring-1 ring-[#ffd97a]' : ''}">{#each highlightSegments(tag) as s}{#if s.mark}<mark class="bg-[#ffd97a] text-black rounded-[2px] px-[1px]">{s.t}</mark>{:else}{s.t}{/if}{/each}</span>
                         {/each}
                       </span>
                     {:else}
-                      <span class="text-[#ddd] font-mono text-[0.8rem]">{value}</span>
+                      <span class="text-[#ddd] font-mono text-[0.8rem]">{#each highlightSegments(value) as s}{#if s.mark}<mark class="bg-[#ffd97a] text-black rounded-[2px] px-[1px]">{s.t}</mark>{:else}{s.t}{/if}{/each}</span>
                     {/if}
                   </div>
                 {/each}
