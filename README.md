@@ -83,6 +83,10 @@ save.
   </a>
   &nbsp;
   <a href="https://github.com/eduardohilariodev/glazewm-config-editor/releases/latest">
+    <img alt="Download portable for Windows" src="https://img.shields.io/badge/Windows-Download%20portable%20.zip-0078D4?style=for-the-badge&logo=windows" />
+  </a>
+  &nbsp;
+  <a href="https://github.com/eduardohilariodev/glazewm-config-editor/releases/latest">
     <img alt="Download for macOS" src="https://img.shields.io/badge/macOS-Download%20.dmg-000000?style=for-the-badge&logo=apple" />
   </a>
 </p>
@@ -174,8 +178,16 @@ winget install eduardohilariodev.GlazeWMConfigEditor
 
 Download the latest installer from the
 [Releases page](https://github.com/eduardohilariodev/glazewm-config-editor/releases/latest)
-and run it. Windows ships both an **NSIS `.exe` installer** and an **MSI package**;
-use whichever fits your deployment. macOS ships as a `.dmg` disk image.
+and run it. Windows ships an **NSIS `.exe` installer**, an **MSI package**, and a
+**portable `.zip`** (no installation required); use whichever fits your deployment.
+macOS ships as a `.dmg` disk image.
+
+### 💼 Portable (Windows)
+
+Grab the `glazewm-editor-<version>-x64-portable.zip` asset from the
+[Releases page](https://github.com/eduardohilariodev/glazewm-config-editor/releases/latest),
+extract it anywhere, and run `glazewm-editor.exe` — no installation or admin rights needed.
+Settings and state are stored in `%APPDATA%\com.glazewm.editor`.
 
 ---
 
@@ -341,8 +353,11 @@ GlazeWM **v3.x** is fully supported. Older versions may work but are not
 actively tested.
 
 **Q: Is there a portable (no-install) version?**  
-Portable builds are not currently offered. Use Scoop for a no-UAC
-install experience.
+Yes. Grab the `glazewm-editor-<version>-x64-portable.zip` asset from the
+[Releases page](https://github.com/eduardohilariodev/glazewm-config-editor/releases/latest),
+extract it, and run `glazewm-editor.exe` directly.
+No installation or admin rights required.
+Use Scoop for an equivalent no-UAC, auto-updating experience.
 
 ---
 

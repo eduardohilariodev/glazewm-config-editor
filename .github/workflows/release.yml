@@ -96,7 +96,22 @@ jobs:
           args: ${{ matrix.args }}
           tauriScript: deno task tauri
 
-  publish-release:
+      - name: Create and upload portable zip
+        if: matrix.platform == 'windows-latest'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_ID: ${{ github.event.release.id || inputs.release_id }}
+          REPO: ${{ github.repository }}
+        shell: pwsh
+        run: |
+          # Resolve tag name from the release ID so gh can find the release.
+          $tag = gh api /repos/$env:REPO/releases/$env:RELEASE_ID --jq '.tag_name'
+          $zipName = "glazewm-editor-$tag-x64-portable.zip"
+          Compress-Archive -Path "src-tauri\target\release\glazewm-editor.exe" `
+            -DestinationPath $zipName -Force
+          gh release upload $tag $zipName --clobber
+
+
     name: Publish release
     needs: build
     runs-on: ubuntu-latest
