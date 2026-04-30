@@ -9,6 +9,11 @@ body:
         Thanks for the suggestion. Please describe the problem first, then the solution
         you have in mind.
 
+        Before opening, please search [existing issues](https://github.com/eduardohilariodev/glazewm-config-editor/issues)
+        and read our [Contributing guide](https://github.com/eduardohilariodev/glazewm-config-editor/blob/main/CONTRIBUTING.md).
+        By submitting this issue you agree to follow the project's
+        [Code of Conduct](https://www.contributor-covenant.org/version/2/1/code_of_conduct/).
+
   - type: textarea
     id: problem
     attributes:

@@ -1,0 +1,58 @@
+name: Documentation issue
+description: Report missing, incorrect, or confusing documentation.
+title: "docs: <short description>"
+labels: ["documentation", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve our documentation!
+
+        Before opening, please search [existing issues](https://github.com/eduardohilariodev/glazewm-config-editor/issues)
+        and read our [Contributing guide](https://github.com/eduardohilariodev/glazewm-config-editor/blob/main/CONTRIBUTING.md).
+        By submitting this issue you agree to follow the project's
+        [Code of Conduct](https://www.contributor-covenant.org/version/2/1/code_of_conduct/).
+
+  - type: dropdown
+    id: type
+    attributes:
+      label: Type of documentation issue
+      options:
+        - Missing documentation
+        - Incorrect or outdated information
+        - Confusing or unclear explanation
+        - Typo or formatting problem
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: location
+    attributes:
+      label: Location
+      description: Link to the page or section with the issue (URL, file path, or heading).
+      placeholder: e.g. README.md — "Development" section
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What is wrong or missing?
+      description: Describe the problem clearly and concisely.
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested improvement
+      description: How should the documentation read? You can paste a proposed text or outline.
+
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: Confirmations
+      options:
+        - label: I have searched existing issues and this is not a duplicate.
+          required: true
