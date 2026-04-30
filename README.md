@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="public/icon.png" alt="GlazeWM Config Editor icon" width="120" />
+</p>
+
 <h1 align="center">GlazeWM Config Editor</h1>
 
 <p align="center">
