@@ -111,7 +111,7 @@ jobs:
           fi
 
       - name: Checkout Scoop bucket repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: ${{ secrets.SCOOP_BUCKET_REPO }}
           token: ${{ secrets.SCOOP_BUCKET_TOKEN }}
